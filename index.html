@@ -3,26 +3,863 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daamitha Gallery</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Daamitha - Contemporary Oil Paintings | Bangalore • Dubai • UK</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --deep-saffron: #ff6b35;
+            --turmeric: #f7931e;
+            --emerald: #2d5016;
+            --burgundy: #800020;
+            --marigold: #ffb000;
+            --terracotta: #e07a5f;
+            --deep-teal: #264653;
+            --warm-ivory: #fdf8f5;
+            --rich-cream: #f4f1eb;
+            --gold-leaf: #d4af37;
+            --charcoal: #2a2a2a;
+            --sage: #87a96b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lora', serif;
+            line-height: 1.7;
+            color: var(--charcoal);
+            background: var(--warm-ivory);
+            overflow-x: hidden;
+        }
+
+        /* Decorative Elements */
+        .mandala-bg {
+            position: absolute;
+            top: -200px;
+            right: -200px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--marigold) 2px, transparent 2px);
+            background-size: 30px 30px;
+            opacity: 0.1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: linear-gradient(135deg, var(--deep-teal) 0%, var(--burgundy) 100%);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-family: 'Crimson Text', serif;
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: var(--marigold);
+            text-decoration: none;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .logo::after {
+            content: '🎨';
+            margin-left: 8px;
+            font-size: 1.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2.5rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--warm-ivory);
+            font-weight: 500;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 8px 16px;
+            border-radius: 25px;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.15);
+            color: var(--marigold);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--deep-saffron) 0%, var(--turmeric) 30%, var(--terracotta) 70%, var(--burgundy) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="paisley" patternUnits="userSpaceOnUse" width="40" height="40"><path d="M20 5 Q35 5 35 20 Q35 30 25 35 Q15 35 5 25 Q5 15 20 5Z" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23paisley)"/></svg>');
+            animation: drift 30s linear infinite;
+        }
+
+        @keyframes drift {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(100px); }
+        }
+
+        .hero-content {
+            text-align: center;
+            max-width: 900px;
+            padding: 0 2rem;
+            z-index: 2;
+            color: white;
+        }
+
+        .hero h1 {
+            font-family: 'Crimson Text', serif;
+            font-size: clamp(4rem, 10vw, 7rem);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.4);
+            letter-spacing: -2px;
+        }
+
+        .hero-subtitle {
+            font-size: 1.8rem;
+            font-style: italic;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            color: var(--warm-ivory);
+        }
+
+        .hero-journey {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            background: rgba(255,255,255,0.15);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            display: inline-block;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-button {
+            padding: 15px 35px;
+            background: linear-gradient(45deg, var(--gold-leaf), var(--marigold));
+            color: var(--charcoal);
+            text-decoration: none;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            font-size: 1.1rem;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .cta-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .cta-secondary:hover {
+            background: white;
+            color: var(--charcoal);
+        }
+
+        /* About Section */
+        .about {
+            padding: 120px 0;
+            background: var(--warm-ivory);
+            position: relative;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 5rem;
+            align-items: center;
+        }
+
+        .about-text h2 {
+            font-family: 'Crimson Text', serif;
+            font-size: 3.5rem;
+            margin-bottom: 2rem;
+            color: var(--burgundy);
+            line-height: 1.2;
+        }
+
+        .about-text p {
+            font-size: 1.2rem;
+            color: var(--charcoal);
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+
+        .cultural-highlights {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .highlight-card {
+            background: linear-gradient(135deg, var(--sage) 0%, var(--emerald) 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            transform: rotate(-2deg);
+            transition: transform 0.3s ease;
+        }
+
+        .highlight-card:nth-child(2) {
+            transform: rotate(2deg);
+            background: linear-gradient(135deg, var(--terracotta) 0%, var(--deep-saffron) 100%);
+        }
+
+        .highlight-card:hover {
+            transform: rotate(0deg) scale(1.05);
+        }
+
+        .highlight-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            font-family: 'Crimson Text', serif;
+        }
+
+        .about-image {
+            position: relative;
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            transform: rotate(3deg);
+            transition: transform 0.3s ease;
+        }
+
+        .about-image:hover {
+            transform: rotate(0deg) scale(1.02);
+        }
+
+        .about-image img {
+            width: 100%;
+            height: 600px;
+            object-fit: cover;
+        }
+
+        /* Gallery Section */
+        .gallery-section {
+            padding: 120px 0;
+            background: linear-gradient(135deg, var(--rich-cream) 0%, var(--warm-ivory) 100%);
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 5rem;
+        }
+
+        .section-header h2 {
+            font-family: 'Crimson Text', serif;
+            font-size: 4rem;
+            color: var(--burgundy);
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .section-header h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--deep-saffron), var(--marigold));
+            border-radius: 2px;
+        }
+
+        .section-header p {
+            font-size: 1.3rem;
+            color: var(--charcoal);
+            max-width: 700px;
+            margin: 0 auto;
+            font-style: italic;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 3rem;
+        }
+
+        .artwork-item {
+            background: white;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .artwork-item:hover {
+            transform: translateY(-10px) rotate(1deg);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+        }
+
+        .artwork-item:nth-child(even):hover {
+            transform: translateY(-10px) rotate(-1deg);
+        }
+
+        .artwork-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .artwork-item:hover .artwork-image {
+            transform: scale(1.1);
+        }
+
+        .artwork-info {
+            padding: 2rem;
+            background: linear-gradient(135deg, white 0%, var(--warm-ivory) 100%);
+        }
+
+        .artwork-title {
+            font-family: 'Crimson Text', serif;
+            font-size: 1.6rem;
+            margin-bottom: 0.5rem;
+            color: var(--burgundy);
+        }
+
+        .artwork-details {
+            color: var(--charcoal);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        .artwork-price {
+            font-weight: 600;
+            color: var(--deep-saffron);
+            font-size: 1.3rem;
+            background: linear-gradient(90deg, var(--deep-saffron), var(--turmeric));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Process Section */
+        .process {
+            padding: 120px 0;
+            background: linear-gradient(135deg, var(--deep-teal) 0%, var(--emerald) 100%);
+            color: white;
+            position: relative;
+        }
+
+        .process::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="20" cy="80" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="2" fill="rgba(255,255,255,0.1)"/></svg>');
+            background-size: 50px 50px;
+        }
+
+        .process-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 5rem;
+            align-items: center;
+        }
+
+        .process-images {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            position: relative;
+        }
+
+        .process-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .process-image:hover {
+            transform: scale(1.05) rotate(2deg);
+        }
+
+        .process-image:nth-child(even):hover {
+            transform: scale(1.05) rotate(-2deg);
+        }
+
+        .process-text h2 {
+            font-family: 'Crimson Text', serif;
+            font-size: 3.5rem;
+            margin-bottom: 2rem;
+            color: var(--marigold);
+        }
+
+        .process-steps {
+            list-style: none;
+        }
+
+        .process-steps li {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .process-steps li:hover {
+            transform: translateX(10px);
+            background: rgba(255,255,255,0.15);
+        }
+
+        .process-steps strong {
+            color: var(--marigold);
+            font-size: 1.1rem;
+        }
+
+        /* Heritage Section */
+        .heritage {
+            padding: 120px 0;
+            background: linear-gradient(135deg, var(--terracotta) 0%, var(--burgundy) 100%);
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+
+        .heritage h2 {
+            font-family: 'Crimson Text', serif;
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            color: var(--marigold);
+        }
+
+        .heritage p {
+            font-size: 1.3rem;
+            max-width: 900px;
+            margin: 0 auto 3rem;
+            line-height: 1.8;
+        }
+
+        .music-note {
+            position: absolute;
+            font-size: 2rem;
+            color: var(--marigold);
+            opacity: 0.3;
+            animation: musicFloat 8s ease-in-out infinite;
+        }
+
+        .music-note:nth-child(2) { top: 20%; left: 10%; animation-delay: 1s; }
+        .music-note:nth-child(3) { top: 30%; right: 15%; animation-delay: 2s; }
+        .music-note:nth-child(4) { bottom: 20%; left: 20%; animation-delay: 3s; }
+
+        @keyframes musicFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* Contact Section */
+        .contact {
+            padding: 120px 0;
+            background: var(--warm-ivory);
+            text-align: center;
+        }
+
+        .contact h2 {
+            font-family: 'Crimson Text', serif;
+            font-size: 3.5rem;
+            margin-bottom: 2rem;
+            color: var(--burgundy);
+        }
+
+        .contact p {
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+            color: var(--charcoal);
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .contact-card {
+            background: linear-gradient(135deg, var(--deep-saffron) 0%, var(--turmeric) 100%);
+            color: white;
+            padding: 2.5rem;
+            border-radius: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .contact-card h3 {
+            font-family: 'Crimson Text', serif;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .contact-card a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, var(--charcoal) 0%, var(--burgundy) 100%);
+            color: var(--warm-ivory);
+            text-align: center;
+            padding: 3rem 2rem;
+            font-size: 1rem;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .about-grid, .process-grid { grid-template-columns: 1fr; gap: 2rem; }
+            .gallery-grid { grid-template-columns: 1fr; }
+            .cultural-highlights { grid-template-columns: 1fr; }
+            .contact-grid { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 3rem; }
+            .section-header h2, .about-text h2, .process-text h2, .heritage h2, .contact h2 { font-size: 2.5rem; }
+        }
+
+        /* Smooth Scrolling */
+        html { scroll-behavior: smooth; }
+
+        /* Loading Animation */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(50px);
+            animation: fadeInUp 1s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Welcome to Daamitha's Gallery</h1>
-    </header>
-    <main class="gallery">
-        <img src="https://picsum.photos/seed/1/300" alt="Gallery image 1">
-        <img src="https://picsum.photos/seed/2/300" alt="Gallery image 2">
-        <img src="https://picsum.photos/seed/3/300" alt="Gallery image 3">
-        <img src="https://picsum.photos/seed/4/300" alt="Gallery image 4">
-        <img src="https://picsum.photos/seed/5/300" alt="Gallery image 5">
-        <img src="https://picsum.photos/seed/6/300" alt="Gallery image 6">
-        <img src="https://picsum.photos/seed/7/300" alt="Gallery image 7">
-        <img src="https://picsum.photos/seed/8/300" alt="Gallery image 8">
-        <img src="https://picsum.photos/seed/9/300" alt="Gallery image 9">
-    </main>
+    <div class="mandala-bg"></div>
+    
+    <nav>
+        <div class="nav-container">
+            <a href="#home" class="logo">Daamitha</a>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">Story</a></li>
+                <li><a href="#gallery">Gallery</a></li>
+                <li><a href="#process">Process</a></li>
+                <li><a href="#heritage">Heritage</a></li>
+                <li><a href="#contact">Acquire</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section id="home" class="hero">
+        <div class="hero-content fade-in">
+            <h1>Daamitha</h1>
+            <p class="hero-subtitle">Contemporary Oil Paintings with Soul</p>
+            <p class="hero-journey">Contemporary Oil Painter • London</p>
+            <div class="cta-buttons">
+                <a href="#gallery" class="cta-button">Explore Collection</a>
+                <a href="#heritage" class="cta-button cta-secondary">Cultural Heritage</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="about">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-text fade-in">
+                    <h2>The Artist's Journey</h2>
+                    <p>Born amidst the vibrant colors and rich traditions of India, Daamitha's artistic soul was nurtured by the cultural heartbeat of South Indian traditions. Currently pursuing her medical studies in London while maintaining her artistic practice, she has created a beautiful fusion of Eastern heritage and contemporary expression.</p>
+                    
+                    <p>Daamitha bridges the analytical precision of her medical studies with the emotional depth of oil painting. Her canvas becomes a meeting place where traditional Indian philosophy meets Western technique, creating works that speak to the universal human experience while celebrating her cultural roots.</p>
+                    
+                    <div class="cultural-highlights">
+                        <div class="highlight-card">
+                            <h3>🎨 Oil Painting</h3>
+                            <p>Rich, layered works that capture the essence of multicultural experiences</p>
+                        </div>
+                        <div class="highlight-card">
+                            <h3>🎵 Traditional Songs</h3>
+                            <p>Keeper of Bangalore's musical heritage through traditional Indian vocals</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image fade-in">
+                    <img src="https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=600&fit=crop" alt="Daamitha in her studio with oil paintings">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="gallery" class="gallery-section">
+        <div class="container">
+            <div class="section-header fade-in">
+                <h2>Oil Painting Collection</h2>
+                <p>Each piece tells a story of cultural fusion, painted with traditional oil techniques and contemporary vision</p>
+            </div>
+            
+            <div class="gallery-grid">
+                <div class="artwork-item fade-in">
+                    <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&h=400&fit=crop" alt="Monsoon Memories" class="artwork-image">
+                    <div class="artwork-info">
+                        <h3 class="artwork-title">Monsoon Memories</h3>
+                        <p class="artwork-details">Oil on linen canvas • 30" × 24" • 2024<br>Inspired by monsoon season</p>
+                        <p class="artwork-price">£1,800</p>
+                    </div>
+                </div>
+
+                <div class="artwork-item fade-in">
+                    <img src="https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=500&h=400&fit=crop" alt="Between Worlds" class="artwork-image">
+                    <div class="artwork-info">
+                        <h3 class="artwork-title">Between Worlds</h3>
+                        <p class="artwork-details">Oil on canvas • 36" × 28" • 2024<br>A meditation on multicultural identity</p>
+                        <p class="artwork-price">£2,400</p>
+                    </div>
+                </div>
+
+                <div class="artwork-item fade-in">
+                    <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&h=400&fit=crop&auto=format&q=60" alt="Golden Dreams" class="artwork-image">
+                    <div class="artwork-info">
+                        <h3 class="artwork-title">Golden Dreams</h3>
+                        <p class="artwork-details">Oil on canvas • 24" × 20" • 2023<br>Golden hour meditation</p>
+                        <p class="artwork-price">£1,400</p>
+                    </div>
+                </div>
+
+                <div class="artwork-item fade-in">
+                    <img src="https://images.unsplash.com/photo-1578321272176-b7bbc0679853?w=500&h=400&fit=crop" alt="Temple Bells" class="artwork-image">
+                    <div class="artwork-info">
+                        <h3 class="artwork-title">Temple Bells at Dawn</h3>
+                        <p class="artwork-details">Oil on canvas • 32" × 26" • 2024<br>Morning prayers and reflection</p>
+                        <p class="artwork-price">£2,000</p>
+                    </div>
+                </div>
+
+                <div class="artwork-item fade-in">
+                    <img src="https://images.unsplash.com/photo-1561214078-f3247647fc5e?w=500&h=400&fit=crop" alt="Healing Hands" class="artwork-image">
+                    <div class="artwork-info">
+                        <h3 class="artwork-title">Healing Hands</h3>
+                        <p class="artwork-details">Oil on canvas • 22" × 18" • 2024<br>The intersection of art and medicine</p>
+                        <p class="artwork-price">£1,600</p>
+                    </div>
+                </div>
+
+                <div class="artwork-item fade-in">
+                    <img src="https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=500&h=400&fit=crop" alt="Songs of Home" class="artwork-image">
+                    <div class="artwork-info">
+                        <h3 class="artwork-title">Songs of Home</h3>
+                        <p class="artwork-details">Oil on canvas • 28" × 22" • 2024<br>Traditional melodies made visual</p>
+                        <p class="artwork-price">£1,700</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="process" class="process">
+        <div class="container">
+            <div class="process-grid">
+                <div class="process-images fade-in">
+                    <img src="https://images.unsplash.com/photo-1596548438137-d51ea5c83ca4?w=400&h=300&fit=crop" alt="Color palette preparation" class="process-image">
+                    <img src="https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=400&h=300&fit=crop" alt="Detailed brushwork" class="process-image">
+                    <img src="https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=400&h=300&fit=crop" alt="Canvas preparation" class="process-image">
+                    <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop" alt="Studio workspace" class="process-image">
+                </div>
+                <div class="process-text fade-in">
+                    <h2>The Oil Painting Process</h2>
+                    <ol class="process-steps">
+                        <li><strong>Cultural Inspiration:</strong> Each painting begins with a memory, a song, or a moment of cultural reflection. I sketch while listening to traditional Indian music.</li>
+                        <li><strong>Canvas Meditation:</strong> Premium Belgian linen is prepared with multiple layers of rabbit skin glue and oil-based primer, creating a luminous foundation.</li>
+                        <li><strong>Color Alchemy:</strong> Hand-mixed oil pigments create custom colors inspired by Indian spices, desert sunsets, and English gardens.</li>
+                        <li><strong>Layered Storytelling:</strong> Each layer is applied using traditional glazing techniques, building depth and luminosity over weeks of careful work.</li>
+                        <li><strong>Soul Integration:</strong> The final details are painted while singing traditional songs, infusing each piece with cultural memory and personal journey.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="heritage" class="heritage">
+        <div class="container fade-in">
+            <div class="music-note">♪</div>
+            <div class="music-note">♫</div>
+            <div class="music-note">♪</div>
+            <div class="music-note">♬</div>
+            
+            <h2>Musical Heritage & Artistic Vision</h2>
+            <p>The traditional songs of South India flow through my veins like paint through a brush. Each morning, I begin with vocal practice – ancient melodies passed down through generations of women in my family. These songs, with their complex ragas and emotional depths, directly influence the rhythm and color choices in my oil paintings.</p>
+            
+            <p>My art is not just visual; it's synesthetic. The warm oranges and deep crimsons in my paintings echo the passionate notes of Karnataka classical music. The flowing brushstrokes mirror the melodic phrases of traditional folk songs. When you view my work, you're not just seeing a painting – you're experiencing the musical soul of South India translated through oil and canvas.</p>
+        </div>
+    </section>
+
+    <section id="contact" class="contact">
+        <div class="container fade-in">
+            <h2>Acquire Original Artworks</h2>
+            <p>Each painting is a unique piece of cultural storytelling, available for collectors worldwide</p>
+            
+            <div class="contact-grid">
+                <div class="contact-card">
+                    <h3>📧 Commission Enquiries</h3>
+                    <a href="mailto:daamitha.artist@gmail.com">daamitha.artist@gmail.com</a>
+                    <p>Custom pieces celebrating your own cultural journey</p>
+                </div>
+                
+                <div class="contact-card">
+                    <h3>🏠 Studio Visits</h3>
+                    <p>Private viewings by appointment<br>United Kingdom • Video calls available</p>
+                </div>
+                
+                <div class="contact-card">
+                    <h3>🌍 Global Shipping</h3>
+                    <p>Professional art shipping worldwide<br>Fully insured • Certificate of authenticity</p>
+                </div>
+            </div>
+            
+            <p style="margin-top: 2rem; font-style: italic; color: var(--burgundy);">
+                "Each painting carries the songs of my ancestors and the dreams of my future." - Daamitha
+            </p>
+        </div>
+    </section>
+
     <footer>
-        &copy; 2024 Daamitha
+        <p>&copy; 2024 Daamitha • Original Oil Paintings • Indian Heritage • Contemporary Vision</p>
+        <p>Medical Student | Traditional Singer | Oil Painter</p>
     </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Fade in animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationDelay = Math.random() * 0.5 + 's';
+                    entry.target.classList.add('fade-in');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Parallax effect for decorative elements
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const mandala = document.querySelector('.mandala-bg');
+            if (mandala) {
+                mandala.style.transform = `translateY(${scrolled * 0.5}px) rotate(${scrolled * 0.1}deg)`;
+            }
+        });
+
+        // Color theme transitions
+        let currentTheme = 0;
+        const themes = [
+            { primary: '#ff6b35', secondary: '#f7931e' },
+            { primary: '#800020', secondary: '#e07a5f' },
+            { primary: '#264653', secondary: '#2d5016' }
+        ];
+
+        // Dynamic color shifting (subtle)
+        setInterval(() => {
+            currentTheme = (currentTheme + 1) % themes.length;
+            document.documentElement.style.setProperty('--accent-color', themes[currentTheme].primary);
+        }, 10000);
+    </script>
 </body>
 </html>

@@ -10,6 +10,9 @@ const bodyParser = require('body-parser');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy (required for Railway and other cloud platforms)
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet({
     contentSecurityPolicy: {
@@ -79,4 +82,9 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`Admin panel: http://localhost:${PORT}/admin/login.html`);
+
+    // Warn if using default JWT secret
+    if (!process.env.JWT_SECRET) {
+        console.warn('⚠️  WARNING: Using default JWT secret. Set JWT_SECRET environment variable in production!');
+    }
 });

@@ -7,8 +7,10 @@ const authMiddleware = (req, res, next) => {
         return res.status(401).json({ error: 'Access denied. No token provided.' });
     }
 
+    const jwtSecret = process.env.JWT_SECRET || 'default_dev_secret_change_in_production';
+
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, jwtSecret);
         req.user = decoded;
         next();
     } catch (error) {

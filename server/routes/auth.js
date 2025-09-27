@@ -30,9 +30,11 @@ router.post('/login', (req, res) => {
                 return res.status(401).json({ error: 'Invalid credentials' });
             }
 
+            const jwtSecret = process.env.JWT_SECRET || 'default_dev_secret_change_in_production';
+
             const token = jwt.sign(
                 { id: user.id, email: user.email, role: user.role },
-                process.env.JWT_SECRET,
+                jwtSecret,
                 { expiresIn: '24h' }
             );
 
@@ -56,8 +58,10 @@ router.get('/verify', (req, res) => {
         return res.status(401).json({ error: 'No token provided' });
     }
 
+    const jwtSecret = process.env.JWT_SECRET || 'default_dev_secret_change_in_production';
+
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, jwtSecret);
         res.json({ valid: true, user: decoded });
     } catch (error) {
         res.status(401).json({ valid: false, error: 'Invalid token' });

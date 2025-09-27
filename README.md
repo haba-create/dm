@@ -65,6 +65,9 @@ npm install
 
 3. Configure environment variables:
 ```bash
+# Copy the example file
+cp .env.example .env
+
 # Edit .env file with your settings
 ADMIN_EMAIL=admin@daamitha.art
 ADMIN_PASSWORD=Admin@123
@@ -79,6 +82,17 @@ npm run dev
 5. Access the application:
 - Gallery: http://localhost:3000
 - Admin Dashboard: http://localhost:3000/admin/login.html
+
+## 🚀 Deployment on Railway
+
+1. Create a new project on Railway.app
+2. Connect your GitHub repository
+3. Add the following environment variables in Railway dashboard:
+   - `JWT_SECRET` - A long random string
+   - `ADMIN_EMAIL` - Your admin email
+   - `ADMIN_PASSWORD` - Your admin password
+   - `NODE_ENV` - Set to "production"
+4. Deploy! Railway will automatically build and run your app
 
 ## 🔑 Default Credentials
 

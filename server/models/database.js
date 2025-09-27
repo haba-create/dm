@@ -50,22 +50,32 @@ const initializeDatabase = () => {
         `);
 
         // Check if admin user exists, if not create default admin
-        db.get("SELECT * FROM users WHERE email = ?", [process.env.ADMIN_EMAIL], async (err, row) => {
+        const adminEmail = process.env.ADMIN_EMAIL || 'admin@daamitha.art';
+        const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@123';
+
+        db.get("SELECT * FROM users WHERE email = ?", [adminEmail], async (err, row) => {
             if (!row) {
-                const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
-                db.run(
-                    "INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)",
-                    [process.env.ADMIN_EMAIL, hashedPassword, 'admin'],
-                    (err) => {
-                        if (err) {
-                            console.error('Error creating admin user:', err);
-                        } else {
-                            console.log('Default admin user created');
-                            console.log('Email:', process.env.ADMIN_EMAIL);
-                            console.log('Password:', process.env.ADMIN_PASSWORD);
+                try {
+                    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+                    db.run(
+                        "INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)",
+                        [adminEmail, hashedPassword, 'admin'],
+                        (err) => {
+                            if (err) {
+                                console.error('Error creating admin user:', err);
+                            } else {
+                                console.log('Default admin user created');
+                                console.log('Email:', adminEmail);
+                                // Don't log password in production
+                                if (process.env.NODE_ENV !== 'production') {
+                                    console.log('Password:', adminPassword);
+                                }
+                            }
                         }
-                    }
-                );
+                    );
+                } catch (hashError) {
+                    console.error('Error hashing password:', hashError);
+                }
             }
         });
 

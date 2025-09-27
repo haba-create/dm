@@ -1,0 +1,30 @@
+{
+  "name": "dm",
+  "version": "1.0.0",
+  "description": "This portfolio presents a selection of my artworks created over the years, reflecting my exploration of different ideas, techniques, and materials. I enjoy working with a variety of art styles and experimenting with processes that allow each piece to develop its own character. Many of my paintings are created using oil-based pigment, a practice that requires time and patience, as each work is built up through careful layering and meticulous detail. I hope you like my work!!",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server/app.js",
+    "dev": "nodemon server/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "body-parser": "^2.2.0",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

@@ -1,16 +1,21 @@
-# Daamitha - Contemporary Oil Paintings Portfolio
-# Daamitha - Art Portfolio
+# Daamitha - Gallery Management System
 
-This portfolio presents a selection of my artworks created over the years, reflecting my exploration of different ideas, techniques, and materials. I enjoy working with a variety of art styles and experimenting with processes that allow each piece to develop its own character. Many of my paintings are created using oil-based pigment, a practice that requires time and patience, as each work is built up through careful layering and meticulous detail. I hope you like my work!!
+A dynamic artist portfolio and gallery management system for contemporary oil paintings. This platform showcases the artwork of Daamitha, a medical student and traditional singer from India currently based in London, with a complete admin dashboard for content management.
 
-A beautiful, responsive artist portfolio website showcasing the contemporary oil paintings and cultural heritage of Daamitha, a medical student and traditional singer from India currently based in London.
+## 🚀 MVP Features
 
-## ✨ Features
+### 🔐 **Admin Dashboard**
+- Secure login system with JWT authentication
+- Full CRUD operations for artwork management
+- Dynamic content editing for all site sections
+- Image upload with automatic optimization
+- Private price list management
 
-### 🎨 **Artist Showcase**
-- Contemporary oil painting gallery with high-quality images
-- Individual artwork details including dimensions, year, and pricing
-- Cultural fusion storytelling through visual art
+### 🎨 **Dynamic Gallery**
+- Artworks loaded dynamically from database
+- Real-time updates without code changes
+- Responsive gallery grid with animations
+- Public view (no prices) and admin view (with prices)
 
 ### 🎵 **Cultural Heritage**
 - Integration of South Indian musical traditions
@@ -24,10 +29,136 @@ A beautiful, responsive artist portfolio website showcasing the contemporary oil
 - Progressive loading with fade-in animations
 - Parallax scrolling effects
 
-### 🎨 **Visual Design**
-- Custom color palette inspired by Indian spices and traditions
-- Gradient backgrounds and artistic layouts
-- Typography using elegant serif fonts (Crimson Text, Lora)
-- Cultural decorative elements (paisley patterns, mandala backgrounds)
+### 💬 **Flowise Chatbot**
+- AI-powered gallery assistant
+- Answers questions about artworks and techniques
+- Helps with commission inquiries
+- Custom-trained on artist's background and portfolio
 
-## 🛠️ Technologies Used
+### 📊 **Price List Page**
+- Secure authentication-protected pricing
+- Professional tabular layout
+- Export functionality for collectors
+- Real-time availability status
+
+## 🛠️ Technology Stack
+
+- **Backend**: Node.js + Express.js
+- **Database**: SQLite (easily upgradeable to PostgreSQL)
+- **Authentication**: JWT with bcrypt
+- **Frontend**: Vanilla JavaScript with dynamic content loading
+- **File Storage**: Local filesystem (upgradeable to AWS S3)
+- **Chatbot**: Flowise AI integration
+
+## 📦 Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd dm
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Configure environment variables:
+```bash
+# Edit .env file with your settings
+ADMIN_EMAIL=admin@daamitha.art
+ADMIN_PASSWORD=Admin@123
+JWT_SECRET=your_secret_key_here
+```
+
+4. Start the development server:
+```bash
+npm run dev
+```
+
+5. Access the application:
+- Gallery: http://localhost:3000
+- Admin Dashboard: http://localhost:3000/admin/login.html
+
+## 🔑 Default Credentials
+
+- **Email**: admin@daamitha.art
+- **Password**: Admin@123
+
+⚠️ **Important**: Change these credentials in production!
+
+## 📁 Project Structure
+
+```
+/daamitha-gallery
+  /server            # Backend API
+    /routes          # API endpoints
+    /middleware      # Auth middleware
+    /models          # Database models
+    app.js           # Express server
+  /public            # Frontend files
+    /css             # Stylesheets
+    /js              # Client-side JavaScript
+    index.html       # Main gallery page
+    pricelist.html   # Protected price list
+  /admin             # Admin dashboard
+    login.html       # Admin login
+    dashboard.html   # Admin panel
+  /uploads           # Uploaded artwork images
+  package.json       # Dependencies
+  .env               # Environment variables
+```
+
+## 🚀 Usage Guide
+
+### For Gallery Visitors
+1. Browse the gallery at the homepage
+2. Click the chatbot icon to ask questions
+3. Request price list access through contact form
+
+### For Admin
+1. Log in at `/admin/login.html`
+2. Manage artworks from the dashboard
+3. Edit site content dynamically
+4. View and export price lists
+5. Monitor gallery statistics
+
+## 🤖 Flowise Chatbot Setup
+
+To activate the chatbot:
+
+1. Install and run Flowise locally or use cloud instance
+2. Create a new chatflow with the provided system prompt
+3. Update the chatflow ID in `/public/index.html`:
+```javascript
+chatflowid: 'your-chatflow-id-here',
+apiHost: 'your-flowise-host'
+```
+
+### System Prompt for Chatbot
+The chatbot is configured to act as Daamitha's gallery assistant, knowledgeable about:
+- Artist's background and journey
+- Oil painting techniques
+- Available artworks
+- Commission process
+- Cultural heritage
+
+## 🔒 Security Features
+
+- Password hashing with bcrypt
+- JWT token authentication
+- Rate limiting on API endpoints
+- Input validation and sanitization
+- SQL injection prevention
+- Secure file upload validation
+
+## 📈 Future Enhancements
+
+- [ ] Customer accounts and wishlists
+- [ ] Exhibition management
+- [ ] Email notifications
+- [ ] Analytics dashboard
+- [ ] Multi-language support
+- [ ] Payment integration
+- [ ] AWS S3 for image storage
+- [ ] PostgreSQL for production

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price List - Daamitha Gallery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --deep-saffron: #ff6b35;
+            --turmeric: #f7931e;
+            --emerald: #2d5016;
+            --burgundy: #800020;
+            --marigold: #ffb000;
+            --terracotta: #e07a5f;
+            --deep-teal: #264653;
+            --warm-ivory: #fdf8f5;
+            --rich-cream: #f4f1eb;
+            --gold-leaf: #d4af37;
+            --charcoal: #2a2a2a;
+            --sage: #87a96b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lora', serif;
+            line-height: 1.7;
+            color: var(--charcoal);
+            background: var(--warm-ivory);
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 3px solid var(--burgundy);
+        }
+
+        .header h1 {
+            font-family: 'Crimson Text', serif;
+            font-size: 3.5rem;
+            color: var(--burgundy);
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            color: var(--charcoal);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .date {
+            color: var(--deep-saffron);
+            font-weight: 600;
+        }
+
+        .auth-required {
+            background: linear-gradient(135deg, var(--terracotta) 0%, var(--deep-saffron) 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-required h2 {
+            font-family: 'Crimson Text', serif;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .login-btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: white;
+            color: var(--burgundy);
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+        }
+
+        .price-table th {
+            background: linear-gradient(135deg, var(--deep-teal) 0%, var(--burgundy) 100%);
+            color: white;
+            padding: 1.2rem;
+            text-align: left;
+            font-family: 'Crimson Text', serif;
+            font-size: 1.2rem;
+        }
+
+        .price-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--rich-cream);
+        }
+
+        .price-table tr:hover {
+            background: var(--rich-cream);
+        }
+
+        .price-table .artwork-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .price {
+            font-weight: 600;
+            color: var(--deep-saffron);
+            font-size: 1.1rem;
+        }
+
+        .status-available {
+            color: var(--emerald);
+            font-weight: 600;
+        }
+
+        .status-sold {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .footer-info {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid var(--rich-cream);
+        }
+
+        .footer-info h3 {
+            font-family: 'Crimson Text', serif;
+            color: var(--burgundy);
+            margin-bottom: 1rem;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .contact-info div {
+            text-align: center;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: linear-gradient(45deg, var(--gold-leaf), var(--marigold));
+            color: var(--charcoal);
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .back-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        @media print {
+            .back-link,
+            .auth-required {
+                display: none;
+            }
+
+            body {
+                padding: 0;
+                background: white;
+            }
+
+            .container {
+                box-shadow: none;
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .price-table {
+                font-size: 0.9rem;
+            }
+
+            .price-table th,
+            .price-table td {
+                padding: 0.5rem;
+            }
+
+            .artwork-image {
+                width: 50px;
+                height: 50px;
+            }
+
+            .back-link {
+                position: static;
+                display: block;
+                margin-bottom: 2rem;
+                text-align: center;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--deep-saffron);
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-link">← Back to Gallery</a>
+
+    <div class="container">
+        <div class="header">
+            <h1>Daamitha Gallery</h1>
+            <p>Contemporary Oil Paintings - Private Price List</p>
+            <p class="date">September 2025</p>
+        </div>
+
+        <div id="auth-message" class="auth-required">
+            <h2>Authentication Required</h2>
+            <p>This price list is available to collectors and gallery partners only.</p>
+            <p>Please log in to view pricing information.</p>
+            <a href="/admin/login.html" class="login-btn">Login to View Prices</a>
+        </div>
+
+        <div id="price-content" style="display: none;">
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Title</th>
+                        <th>Artist</th>
+                        <th>Medium</th>
+                        <th>Dimensions</th>
+                        <th>Year</th>
+                        <th>Price (GBP)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="pricelist-tbody">
+                    <tr>
+                        <td colspan="8" class="loading">Loading price list...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="footer-info">
+                <h3>Inquiries & Purchases</h3>
+                <div class="contact-info">
+                    <div>
+                        <strong>Email</strong><br>
+                        daamitha.artist@gmail.com
+                    </div>
+                    <div>
+                        <strong>Location</strong><br>
+                        London, United Kingdom
+                    </div>
+                    <div>
+                        <strong>Shipping</strong><br>
+                        Worldwide delivery available
+                    </div>
+                </div>
+                <p style="margin-top: 2rem; font-style: italic; color: var(--charcoal);">
+                    All prices are subject to change. Shipping and insurance costs are additional.<br>
+                    Each artwork comes with a certificate of authenticity.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication and load price list
+        window.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('authToken');
+
+            if (!token) {
+                return; // Show authentication required message
+            }
+
+            try {
+                // Verify token
+                const verifyResponse = await fetch('/api/auth/verify', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!verifyResponse.ok) {
+                    throw new Error('Invalid token');
+                }
+
+                // Hide auth message and show content
+                document.getElementById('auth-message').style.display = 'none';
+                document.getElementById('price-content').style.display = 'block';
+
+                // Load price list
+                const response = await fetch('/api/artworks/admin/pricelist', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load price list');
+                }
+
+                const artworks = await response.json();
+                const tbody = document.getElementById('pricelist-tbody');
+
+                if (artworks.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No artworks available at this time.</td></tr>';
+                } else {
+                    tbody.innerHTML = artworks.map(artwork => `
+                        <tr>
+                            <td>
+                                <img src="${artwork.image_path}" alt="${artwork.title}" class="artwork-image">
+                            </td>
+                            <td><strong>${artwork.title}</strong></td>
+                            <td>${artwork.artist || 'Daamitha'}</td>
+                            <td>${artwork.technique || 'Oil on canvas'}</td>
+                            <td>${artwork.dimensions || '-'}</td>
+                            <td>${artwork.year || '-'}</td>
+                            <td class="price">£${(artwork.price || 0).toLocaleString()}</td>
+                            <td class="${artwork.available ? 'status-available' : 'status-sold'}">
+                                ${artwork.available ? 'Available' : 'Sold'}
+                            </td>
+                        </tr>
+                    `).join('');
+
+                    // Calculate total value
+                    const totalValue = artworks
+                        .filter(a => a.available)
+                        .reduce((sum, a) => sum + (a.price || 0), 0);
+
+                    // Add summary row
+                    tbody.innerHTML += `
+                        <tr style="font-weight: bold; background: var(--rich-cream);">
+                            <td colspan="6" style="text-align: right;">Total Available Portfolio Value:</td>
+                            <td class="price">£${totalValue.toLocaleString()}</td>
+                            <td></td>
+                        </tr>
+                    `;
+                }
+            } catch (error) {
+                console.error('Authentication error:', error);
+                // Token is invalid, keep showing auth required message
+            }
+        });
+    </script>
+</body>
+</html>

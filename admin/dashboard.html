@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Daamitha Gallery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --deep-saffron: #ff6b35;
+            --turmeric: #f7931e;
+            --emerald: #2d5016;
+            --burgundy: #800020;
+            --marigold: #ffb000;
+            --terracotta: #e07a5f;
+            --deep-teal: #264653;
+            --warm-ivory: #fdf8f5;
+            --rich-cream: #f4f1eb;
+            --gold-leaf: #d4af37;
+            --charcoal: #2a2a2a;
+            --sage: #87a96b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lora', serif;
+            background: var(--warm-ivory);
+            color: var(--charcoal);
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, var(--deep-teal) 0%, var(--burgundy) 100%);
+            padding: 2rem;
+            color: white;
+        }
+
+        .sidebar h2 {
+            font-family: 'Crimson Text', serif;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: var(--marigold);
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-menu li {
+            margin-bottom: 1rem;
+        }
+
+        .nav-menu a {
+            color: var(--warm-ivory);
+            text-decoration: none;
+            display: block;
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-menu a:hover,
+        .nav-menu a.active {
+            background: rgba(255,255,255,0.15);
+            color: var(--marigold);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1400px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--rich-cream);
+        }
+
+        .header h1 {
+            font-family: 'Crimson Text', serif;
+            font-size: 2.5rem;
+            color: var(--burgundy);
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(45deg, var(--gold-leaf), var(--marigold));
+            color: var(--charcoal);
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: var(--deep-saffron);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card p {
+            color: var(--charcoal);
+            font-size: 1.1rem;
+        }
+
+        .recent-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .recent-section h2 {
+            font-family: 'Crimson Text', serif;
+            color: var(--burgundy);
+            margin-bottom: 1.5rem;
+        }
+
+        .artwork-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .artwork-card {
+            background: var(--rich-cream);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .artwork-card:hover {
+            transform: scale(1.05);
+        }
+
+        .artwork-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .artwork-card-info {
+            padding: 1rem;
+        }
+
+        .artwork-card h4 {
+            color: var(--burgundy);
+            margin-bottom: 0.5rem;
+        }
+
+        .artwork-card p {
+            color: var(--charcoal);
+            font-size: 0.9rem;
+        }
+
+        .logout-btn {
+            margin-top: auto;
+            padding-top: 2rem;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            background: var(--burgundy);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+        }
+
+        .table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--rich-cream);
+        }
+
+        .table tr:hover {
+            background: var(--rich-cream);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--charcoal);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid var(--rich-cream);
+            border-radius: 10px;
+            font-family: 'Lora', serif;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--deep-saffron);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--deep-saffron);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <h2>Daamitha</h2>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="#" class="active" data-page="overview">Dashboard</a></li>
+                    <li><a href="#" data-page="artworks">Manage Artworks</a></li>
+                    <li><a href="#" data-page="content">Site Content</a></li>
+                    <li><a href="#" data-page="pricelist">Price List</a></li>
+                    <li><a href="/" target="_blank">View Gallery</a></li>
+                </ul>
+            </nav>
+            <div class="logout-btn">
+                <button class="btn btn-danger" onclick="logout()">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div id="overview-page">
+                <div class="header">
+                    <h1>Dashboard Overview</h1>
+                    <button class="btn" onclick="showAddArtwork()">+ Add New Artwork</button>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="total-artworks">0</h3>
+                        <p>Total Artworks</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="available-artworks">0</h3>
+                        <p>Available for Sale</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="total-value">£0</h3>
+                        <p>Portfolio Value</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="categories">0</h3>
+                        <p>Categories</p>
+                    </div>
+                </div>
+
+                <div class="recent-section">
+                    <h2>Recent Artworks</h2>
+                    <div class="artwork-grid" id="recent-artworks">
+                        <div class="loading">Loading artworks...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="artworks-page" style="display: none;">
+                <div class="header">
+                    <h1>Manage Artworks</h1>
+                    <button class="btn" onclick="showAddArtwork()">+ Add New Artwork</button>
+                </div>
+
+                <div class="recent-section">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Title</th>
+                                <th>Artist</th>
+                                <th>Year</th>
+                                <th>Price</th>
+                                <th>Available</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="artworks-table">
+                            <tr><td colspan="7" class="loading">Loading artworks...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="content-page" style="display: none;">
+                <div class="header">
+                    <h1>Manage Site Content</h1>
+                </div>
+
+                <div class="recent-section">
+                    <h2>Hero Section</h2>
+                    <form id="hero-form">
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" name="title" id="hero-title">
+                        </div>
+                        <div class="form-group">
+                            <label>Subtitle</label>
+                            <input type="text" name="subtitle" id="hero-subtitle">
+                        </div>
+                        <div class="form-group">
+                            <label>Journey Text</label>
+                            <input type="text" name="journey" id="hero-journey">
+                        </div>
+                        <button type="submit" class="btn">Update Hero Section</button>
+                    </form>
+                </div>
+
+                <div class="recent-section">
+                    <h2>About Section</h2>
+                    <form id="about-form">
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" name="title" id="about-title">
+                        </div>
+                        <div class="form-group">
+                            <label>Content</label>
+                            <textarea name="content" id="about-content" rows="10"></textarea>
+                        </div>
+                        <button type="submit" class="btn">Update About Section</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="pricelist-page" style="display: none;">
+                <div class="header">
+                    <h1>Price List</h1>
+                    <button class="btn" onclick="exportPriceList()">Export as PDF</button>
+                </div>
+
+                <div class="recent-section">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Artist</th>
+                                <th>Technique</th>
+                                <th>Dimensions</th>
+                                <th>Year</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pricelist-table">
+                            <tr><td colspan="7" class="loading">Loading price list...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Artwork Modal -->
+    <div id="artwork-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Add New Artwork</h2>
+            <form id="artwork-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>Title *</label>
+                    <input type="text" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label>Artist</label>
+                    <input type="text" name="artist" value="Daamitha">
+                </div>
+                <div class="form-group">
+                    <label>Technique</label>
+                    <input type="text" name="technique" placeholder="Oil on canvas">
+                </div>
+                <div class="form-group">
+                    <label>Dimensions</label>
+                    <input type="text" name="dimensions" placeholder='24" × 18"'>
+                </div>
+                <div class="form-group">
+                    <label>Year</label>
+                    <input type="number" name="year" value="2025">
+                </div>
+                <div class="form-group">
+                    <label>Price (£)</label>
+                    <input type="number" name="price" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select name="category">
+                        <option value="Contemporary">Contemporary</option>
+                        <option value="Animals">Animals</option>
+                        <option value="Nature">Nature</option>
+                        <option value="Abstract">Abstract</option>
+                        <option value="Portrait">Portrait</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Image</label>
+                    <input type="file" name="image" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="available" checked> Available for sale
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn">Save Artwork</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/admin.js"></script>
+</body>
+</html>

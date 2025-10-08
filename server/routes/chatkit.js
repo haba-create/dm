@@ -79,7 +79,13 @@ router.post('/session', async (req, res) => {
 router.get('/health', (req, res) => {
     res.json({
         status: 'ok',
-        chatkit_configured: !!(process.env.OPENAI_API_KEY && process.env.CHATKIT_WORKFLOW_ID)
+        chatkit_configured: !!(process.env.OPENAI_API_KEY && process.env.CHATKIT_WORKFLOW_ID),
+        debug: {
+            hasApiKey: !!process.env.OPENAI_API_KEY,
+            hasWorkflowId: !!process.env.CHATKIT_WORKFLOW_ID,
+            apiKeyLength: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0,
+            workflowIdLength: process.env.CHATKIT_WORKFLOW_ID ? process.env.CHATKIT_WORKFLOW_ID.length : 0
+        }
     });
 });
 

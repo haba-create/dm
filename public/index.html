@@ -817,69 +817,67 @@
     <!-- Load gallery data dynamically -->
     <script src="/js/gallery.js"></script>
 
-    <!-- Flowise Chatbot Integration -->
-    <script type="module">
-        import Chatbot from 'https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js';
-        Chatbot.init({
-            chatflowid: 'your-chatflow-id-here', // Replace with actual Flowise chatflow ID
-            apiHost: 'http://localhost:3000', // Replace with actual Flowise host
-            theme: {
-                button: {
-                    backgroundColor: '#800020',
-                    right: 20,
-                    bottom: 20,
-                    size: 56,
-                    dragAndDrop: true,
-                    iconColor: 'white',
-                    customIconSrc: 'https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/svg/messages.svg',
-                    autoWindowOpen: {
-                        autoOpen: false,
-                        openDelay: 2,
-                        autoOpenOnMobile: false,
+    <!-- OpenAI ChatKit Integration -->
+    <script src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js" async></script>
+    <script>
+        // Initialize ChatKit when the script loads
+        window.addEventListener('load', async function() {
+            try {
+                // Create custom element for ChatKit
+                const chatkitElement = document.createElement('openai-chatkit');
+
+                // Configure ChatKit options
+                chatkitElement.setOptions({
+                    api: {
+                        async getClientSecret() {
+                            try {
+                                const response = await fetch('/api/chatkit/session', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    }
+                                });
+
+                                if (!response.ok) {
+                                    throw new Error('Failed to create ChatKit session');
+                                }
+
+                                const data = await response.json();
+                                return data.client_secret;
+                            } catch (error) {
+                                console.error('ChatKit session error:', error);
+                                throw error;
+                            }
+                        }
                     },
-                },
-                tooltip: {
-                    showTooltip: true,
-                    tooltipMessage: 'Hi! Ask me about Daamitha\'s artwork',
-                    tooltipBackgroundColor: '#800020',
-                    tooltipTextColor: 'white',
-                    tooltipFontSize: 14,
-                },
-                chatWindow: {
-                    title: 'Daamitha Gallery Assistant',
-                    titleAvatarSrc: '',
-                    welcomeMessage: 'Welcome! I\'m here to help you explore Daamitha\'s collection of contemporary oil paintings. Feel free to ask about her artistic journey, techniques, or any specific artwork.',
-                    backgroundColor: '#fdf8f5',
-                    fontSize: 16,
-                    poweredByTextColor: '#800020',
-                    botMessage: {
-                        backgroundColor: '#f4f1eb',
-                        textColor: '#2a2a2a',
-                        avatarSrc: '',
-                        showAvatar: false,
-                    },
-                    userMessage: {
-                        backgroundColor: '#800020',
-                        textColor: 'white',
-                        showAvatar: false,
-                    },
-                    textInput: {
-                        placeholder: 'Ask about artworks, techniques, or commissions...',
-                        backgroundColor: '#ffffff',
-                        textColor: '#2a2a2a',
-                        sendButtonColor: '#800020',
-                    },
-                    footer: {
-                        textColor: '#2a2a2a',
-                        text: 'Powered by',
-                        company: 'Daamitha Gallery',
-                    },
-                    disclaimer: {
-                        title: 'Gallery Assistant',
-                        message: 'I can help with artwork inquiries, techniques, and gallery information. For pricing, please request our private pricelist.',
-                    },
-                }
-            },
+                    ui: {
+                        button: {
+                            backgroundColor: '#800020',
+                            iconColor: 'white',
+                            position: 'bottom-right',
+                            size: 56
+                        },
+                        chat: {
+                            title: 'Daamitha Gallery Assistant',
+                            welcomeMessage: 'Welcome! I\'m here to help you explore Daamitha\'s collection of contemporary oil paintings. Feel free to ask about her artistic journey, techniques, or any specific artwork.',
+                            placeholder: 'Ask about artworks, techniques, or commissions...',
+                            primaryColor: '#800020',
+                            backgroundColor: '#fdf8f5'
+                        }
+                    }
+                });
+
+                // Style the ChatKit element
+                chatkitElement.style.height = '600px';
+                chatkitElement.style.width = '400px';
+
+                // Append to body
+                document.body.appendChild(chatkitElement);
+
+                console.log('ChatKit initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize ChatKit:', error);
+            }
         });
     </script>
 </body>

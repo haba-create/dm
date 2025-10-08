@@ -19,10 +19,12 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://cdn.platform.openai.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'", "http://localhost:*", "https://flowiseai.com"]
+            connectSrc: ["'self'", "http://localhost:*", "https://*.openai.com", "https://cdn.platform.openai.com", "wss://*.openai.com"],
+            frameSrc: ["'self'", "https://*.openai.com"],
+            workerSrc: ["'self'", "blob:"]
         }
     }
 }));
@@ -52,11 +54,13 @@ app.use('/images', express.static(path.join(__dirname, '..')));
 const authRoutes = require('./routes/auth');
 const artworkRoutes = require('./routes/artworks');
 const contentRoutes = require('./routes/content');
+const chatkitRoutes = require('./routes/chatkit');
 
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/artworks', artworkRoutes);
 app.use('/api/content', contentRoutes);
+app.use('/api/chatkit', chatkitRoutes);
 
 // Serve main index.html for root route
 app.get('/', (req, res) => {

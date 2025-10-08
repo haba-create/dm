@@ -2,10 +2,17 @@ const express = require('express');
 const router = express.Router();
 const OpenAI = require('openai');
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-});
+// Lazy initialization of OpenAI client
+let openai = null;
+
+function getOpenAIClient() {
+    if (!openai && process.env.OPENAI_API_KEY) {
+        openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY
+        });
+    }
+    return openai;
+}
 
 // Create ChatKit session endpoint
 router.post('/session', async (req, res) => {
@@ -13,20 +20,28 @@ router.post('/session', async (req, res) => {
         // Validate API key is configured
         if (!process.env.OPENAI_API_KEY) {
             return res.status(500).json({
-                error: 'OpenAI API key not configured'
+                error: 'OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.'
             });
         }
 
         // Validate workflow ID is configured
         if (!process.env.CHATKIT_WORKFLOW_ID) {
             return res.status(500).json({
-                error: 'ChatKit workflow ID not configured'
+                error: 'ChatKit workflow ID not configured. Please set CHATKIT_WORKFLOW_ID environment variable.'
+            });
+        }
+
+        // Get or create OpenAI client
+        const client = getOpenAIClient();
+        if (!client) {
+            return res.status(500).json({
+                error: 'Failed to initialize OpenAI client'
             });
         }
 
         // Create a ChatKit session
         // Note: You can customize the session parameters based on your needs
-        const session = await openai.chatkit.sessions.create({
+        const session = await client.chatkit.sessions.create({
             workflow_id: process.env.CHATKIT_WORKFLOW_ID,
             // Optional: Add user context or metadata
             metadata: {

@@ -818,67 +818,85 @@
     <script src="/js/gallery.js"></script>
 
     <!-- OpenAI ChatKit Integration -->
-    <script src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js" async></script>
     <script>
-        // Initialize ChatKit when the script loads
-        window.addEventListener('load', async function() {
-            try {
-                // Create custom element for ChatKit
-                const chatkitElement = document.createElement('openai-chatkit');
+        // Initialize ChatKit - wait for script to load
+        (function() {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.platform.openai.com/deployments/chatkit/chatkit.js';
+            script.onload = async function() {
+                console.log('ChatKit script loaded');
 
-                // Configure ChatKit options
-                chatkitElement.setOptions({
-                    api: {
-                        async getClientSecret() {
-                            try {
-                                const response = await fetch('/api/chatkit/session', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
+                // Wait a bit for custom elements to be defined
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                try {
+                    // Create custom element for ChatKit
+                    const chatkitElement = document.createElement('openai-chatkit');
+
+                    if (!chatkitElement.setOptions) {
+                        console.error('ChatKit element not properly initialized');
+                        return;
+                    }
+
+                    // Configure ChatKit options
+                    chatkitElement.setOptions({
+                        api: {
+                            async getClientSecret() {
+                                try {
+                                    const response = await fetch('/api/chatkit/session', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        }
+                                    });
+
+                                    if (!response.ok) {
+                                        const errorData = await response.json();
+                                        console.error('Session creation failed:', errorData);
+                                        throw new Error('Failed to create ChatKit session');
                                     }
-                                });
 
-                                if (!response.ok) {
-                                    throw new Error('Failed to create ChatKit session');
+                                    const data = await response.json();
+                                    console.log('ChatKit session created successfully');
+                                    return data.client_secret;
+                                } catch (error) {
+                                    console.error('ChatKit session error:', error);
+                                    throw error;
                                 }
-
-                                const data = await response.json();
-                                return data.client_secret;
-                            } catch (error) {
-                                console.error('ChatKit session error:', error);
-                                throw error;
+                            }
+                        },
+                        ui: {
+                            button: {
+                                backgroundColor: '#800020',
+                                iconColor: 'white',
+                                position: 'bottom-right',
+                                size: 56
+                            },
+                            chat: {
+                                title: 'Daamitha Gallery Assistant',
+                                welcomeMessage: 'Welcome! I\'m here to help you explore Daamitha\'s collection of contemporary oil paintings. Feel free to ask about her artistic journey, techniques, or any specific artwork.',
+                                placeholder: 'Ask about artworks, techniques, or commissions...',
+                                primaryColor: '#800020',
+                                backgroundColor: '#fdf8f5'
                             }
                         }
-                    },
-                    ui: {
-                        button: {
-                            backgroundColor: '#800020',
-                            iconColor: 'white',
-                            position: 'bottom-right',
-                            size: 56
-                        },
-                        chat: {
-                            title: 'Daamitha Gallery Assistant',
-                            welcomeMessage: 'Welcome! I\'m here to help you explore Daamitha\'s collection of contemporary oil paintings. Feel free to ask about her artistic journey, techniques, or any specific artwork.',
-                            placeholder: 'Ask about artworks, techniques, or commissions...',
-                            primaryColor: '#800020',
-                            backgroundColor: '#fdf8f5'
-                        }
-                    }
-                });
+                    });
 
-                // Style the ChatKit element
-                chatkitElement.style.height = '600px';
-                chatkitElement.style.width = '400px';
+                    // Append to body
+                    document.body.appendChild(chatkitElement);
 
-                // Append to body
-                document.body.appendChild(chatkitElement);
+                    console.log('ChatKit initialized successfully');
+                } catch (error) {
+                    console.error('Failed to initialize ChatKit:', error);
+                }
+            };
 
-                console.log('ChatKit initialized successfully');
-            } catch (error) {
-                console.error('Failed to initialize ChatKit:', error);
-            }
-        });
+            script.onerror = function() {
+                console.error('Failed to load ChatKit script');
+            };
+
+            document.head.appendChild(script);
+        })();
     </script>
 </body>
 </html>

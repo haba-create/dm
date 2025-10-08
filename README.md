@@ -176,3 +176,4 @@ The chatbot is configured to act as Daamitha's gallery assistant, knowledgeable 
 - [ ] Payment integration
 - [ ] AWS S3 for image storage
 - [ ] PostgreSQL for production
+# ChatKit Integration

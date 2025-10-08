@@ -55,12 +55,14 @@ const authRoutes = require('./routes/auth');
 const artworkRoutes = require('./routes/artworks');
 const contentRoutes = require('./routes/content');
 const chatkitRoutes = require('./routes/chatkit');
+const agentRoutes = require('./routes/agent');
 
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/artworks', artworkRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/chatkit', chatkitRoutes);
+app.use('/api/agent', agentRoutes);
 
 // Serve main index.html for root route
 app.get('/', (req, res) => {

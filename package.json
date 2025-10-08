@@ -12,6 +12,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@openai/agents": "^0.1.9",
+    "@openai/chatkit": "^1.0.0",
+    "@openai/guardrails": "^0.1.0",
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
     "compression": "^1.8.1",
@@ -26,6 +29,8 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "@playwright/test": "^1.56.0",
+    "nodemon": "^3.1.10",
+    "playwright": "^1.56.0"
   }
 }

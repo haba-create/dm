@@ -3,11 +3,17 @@ const router = express.Router();
 const { OpenAI } = require('openai');
 const { Agent, Runner } = require('@openai/agents');
 
-// Initialize OpenAI client
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Lazy initialization of OpenAI client and agent
+let client = null;
+let galleryAgent = null;
 
-// Create the Gallery Agent
-const galleryAgent = new Agent({
+function initializeAgent() {
+  if (!galleryAgent) {
+    // Initialize OpenAI client
+    client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    // Create the Gallery Agent
+    galleryAgent = new Agent({
   name: "Gallery Agent",
   instructions: `You are Daamitha, a helpful and knowledgeable AI curator and assistant for Daamitha's art gallery.
 
@@ -32,16 +38,29 @@ Be warm, knowledgeable, and enthusiastic about art. Speak with passion about the
     temperature: 0.7,
     store: true
   }
-});
+    });
+  }
+  return galleryAgent;
+}
 
 // Chat endpoint - handles conversation with the agent
 router.post('/chat', async (req, res) => {
   try {
+    // Check if API key is configured
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({
+        error: 'OpenAI API key not configured. Please set OPENAI_API_KEY environment variable in Railway.'
+      });
+    }
+
     const { message, conversationHistory = [] } = req.body;
 
     if (!message || typeof message !== 'string') {
       return res.status(400).json({ error: 'Message is required' });
     }
+
+    // Initialize agent if not already done
+    const agent = initializeAgent();
 
     // Build conversation history
     const agentInput = [
@@ -64,7 +83,7 @@ router.post('/chat', async (req, res) => {
     });
 
     // Run the agent
-    const result = await runner.run(galleryAgent, agentInput);
+    const result = await runner.run(agent, agentInput);
 
     if (!result.finalOutput) {
       throw new Error('Agent did not return a response');

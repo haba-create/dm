@@ -119,7 +119,10 @@ router.get('/health', (req, res) => {
     status: 'ok',
     agent: 'Gallery Agent',
     model: 'gpt-4o',
-    apiKeyConfigured: !!process.env.OPENAI_API_KEY
+    apiKeyConfigured: !!process.env.OPENAI_API_KEY,
+    apiKeyLength: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0,
+    nodeEnv: process.env.NODE_ENV || 'not set',
+    timestamp: new Date().toISOString()
   });
 });
 

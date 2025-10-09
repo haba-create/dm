@@ -816,5 +816,69 @@
 
     <!-- Load gallery data dynamically -->
     <script src="/js/gallery.js"></script>
+
+    <!-- Flowise Chatbot -->
+    <script type="module">
+        import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
+        Chatbot.init({
+            chatflowid: "924eb346-15f4-4447-ba3f-ae63bcc2fe33",
+            apiHost: "https://cloud.flowiseai.com",
+            theme: {
+                button: {
+                    backgroundColor: '#800020',
+                    right: 20,
+                    bottom: 20,
+                    size: 48,
+                    iconColor: '#ffb000',
+                    customIconSrc: 'https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/svg/google-messages.svg',
+                    autoWindowOpen: {
+                        autoOpen: false,
+                        openDelay: 2,
+                        autoOpenOnMobile: false
+                    }
+                },
+                tooltip: {
+                    showTooltip: true,
+                    tooltipMessage: 'Ask about the gallery 🎨',
+                    tooltipBackgroundColor: '#264653',
+                    tooltipTextColor: '#ffb000',
+                    tooltipFontSize: 15
+                },
+                chatWindow: {
+                    showTitle: true,
+                    title: 'Gallery Assistant',
+                    titleAvatarSrc: '🎨',
+                    welcomeMessage: 'Hello! Ask me about Daamitha\'s artworks and artistic journey.',
+                    backgroundColor: '#fdf8f5',
+                    height: 600,
+                    width: 400,
+                    fontSize: 15,
+                    botMessage: {
+                        backgroundColor: '#f4f1eb',
+                        textColor: '#2a2a2a',
+                        showAvatar: true,
+                        avatarSrc: 'https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/svg/google-messages.svg'
+                    },
+                    userMessage: {
+                        backgroundColor: '#800020',
+                        textColor: '#ffffff',
+                        showAvatar: false
+                    },
+                    textInput: {
+                        placeholder: 'Ask about paintings...',
+                        backgroundColor: '#ffffff',
+                        textColor: '#2a2a2a',
+                        sendButtonColor: '#800020'
+                    },
+                    footer: {
+                        textColor: '#87a96b',
+                        text: 'Powered by',
+                        company: 'Flowise',
+                        companyLink: 'https://flowiseai.com'
+                    }
+                }
+            }
+        })
+    </script>
 </body>
 </html>

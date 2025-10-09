@@ -126,4 +126,26 @@ router.get('/health', (req, res) => {
   });
 });
 
+// Debug endpoint to show all env var names (NOT values, for security)
+router.get('/debug-env', (req, res) => {
+  const envVarNames = Object.keys(process.env).sort();
+  const relevantVars = envVarNames.filter(key =>
+    key.includes('OPENAI') ||
+    key.includes('CHATKIT') ||
+    key.includes('JWT') ||
+    key.includes('NODE_ENV') ||
+    key.includes('PORT')
+  );
+
+  res.json({
+    totalEnvVars: envVarNames.length,
+    allEnvVarNames: envVarNames,
+    relevantVars: relevantVars.reduce((acc, key) => {
+      acc[key] = process.env[key] ? `SET (length: ${process.env[key].length})` : 'NOT SET';
+      return acc;
+    }, {}),
+    timestamp: new Date().toISOString()
+  });
+});
+
 module.exports = router;

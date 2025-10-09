@@ -89,8 +89,22 @@ app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`Admin panel: http://localhost:${PORT}/admin/login.html`);
 
+    // Debug: Log environment variable status
+    console.log('\n🔍 Environment Variables Status:');
+    console.log(`NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
+    console.log(`PORT: ${process.env.PORT || 'not set'}`);
+    console.log(`JWT_SECRET: ${process.env.JWT_SECRET ? 'SET (length: ' + process.env.JWT_SECRET.length + ')' : 'NOT SET'}`);
+    console.log(`OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? 'SET (length: ' + process.env.OPENAI_API_KEY.length + ')' : 'NOT SET'}`);
+    console.log(`CHATKIT_WORKFLOW_ID: ${process.env.CHATKIT_WORKFLOW_ID || 'NOT SET'}`);
+    console.log('');
+
     // Warn if using default JWT secret
     if (!process.env.JWT_SECRET) {
         console.warn('⚠️  WARNING: Using default JWT secret. Set JWT_SECRET environment variable in production!');
+    }
+
+    // Warn if OpenAI API key is missing
+    if (!process.env.OPENAI_API_KEY) {
+        console.error('❌ ERROR: OPENAI_API_KEY is not set! Chat functionality will not work.');
     }
 });

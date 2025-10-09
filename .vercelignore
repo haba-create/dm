@@ -1,0 +1,9 @@
+node_modules
+.env
+*.db
+.git
+test-*.js
+*.log
+.DS_Store
+*.png
+CHATKIT_INVESTIGATION_REPORT.md

@@ -816,150 +816,16 @@
 
     <script src="/js/gallery.js"></script>
 
-    <!-- OpenAI ChatKit CDN -->
+    <!-- ChatKit Integration - Temporarily disabled due to CORS issues on localhost -->
+    <!-- Will be enabled after production testing on Railway -->
+    <!--
     <script src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js" async></script>
-
-    <!-- ChatKit Initialization -->
     <script>
-        // Wait for ChatKit to load
-        window.addEventListener('DOMContentLoaded', function() {
-            console.log('🎨 Initializing ChatKit...');
-
-            // Create ChatKit web component
-            const chatkit = document.createElement('openai-chatkit');
-
-            // Configure ChatKit with client secret function
-            chatkit.setOptions({
-                api: {
-                    // Function to get client secret from our backend
-                    getClientSecret: async function(existingToken) {
-                        console.log('📡 Fetching ChatKit client secret from backend...');
-                        try {
-                            const response = await fetch('/api/chatkit/session', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({})
-                            });
-
-                            if (!response.ok) {
-                                const error = await response.json();
-                                console.error('❌ Failed to get client secret:', error);
-                                throw new Error(error.error || 'Failed to get client secret');
-                            }
-
-                            const data = await response.json();
-                            console.log('✅ Client secret obtained successfully');
-                            return data.client_secret;
-                        } catch (error) {
-                            console.error('❌ Error getting client secret:', error);
-                            throw error;
-                        }
-                    }
-                },
-                // Styling configuration
-                className: 'chatkit-widget'
-            });
-
-            // Apply custom styling
-            chatkit.classList.add('h-[600px]', 'w-[400px]');
-
-            // Add to page
-            document.body.appendChild(chatkit);
-
-            console.log('✅ ChatKit web component added to page');
-        });
-
-        // Custom CSS for Indian-inspired styling
-        const style = document.createElement('style');
-        style.textContent = `
-            /* ChatKit Custom Styling */
-            openai-chatkit {
-                position: fixed !important;
-                bottom: 20px !important;
-                right: 20px !important;
-                z-index: 9999 !important;
-                box-shadow: 0 20px 60px rgba(255, 107, 53, 0.4) !important;
-                border-radius: 25px !important;
-                overflow: hidden !important;
-                border: 3px solid var(--marigold) !important;
-            }
-
-            openai-chatkit::part(button) {
-                background: linear-gradient(135deg, var(--deep-saffron), var(--marigold)) !important;
-                box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4) !important;
-                border-radius: 50px !important;
-                padding: 18px 28px !important;
-                font-family: 'Lora', serif !important;
-                font-weight: 600 !important;
-                animation: pulse 2s ease-in-out infinite !important;
-            }
-
-            openai-chatkit::part(button):hover {
-                transform: translateY(-3px) !important;
-                box-shadow: 0 12px 35px rgba(255, 107, 53, 0.6) !important;
-            }
-
-            @keyframes pulse {
-                0%, 100% { box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4); }
-                50% { box-shadow: 0 8px 35px rgba(255, 107, 53, 0.7); }
-            }
-
-            openai-chatkit::part(container) {
-                font-family: 'Lora', serif !important;
-                background: var(--warm-ivory) !important;
-            }
-
-            openai-chatkit::part(header) {
-                background: linear-gradient(135deg, var(--deep-teal), var(--burgundy)) !important;
-                color: var(--warm-ivory) !important;
-                font-family: 'Crimson Text', serif !important;
-                padding: 20px !important;
-            }
-
-            openai-chatkit::part(header)::before {
-                content: '🎨 ';
-            }
-
-            openai-chatkit::part(message-user) {
-                background: linear-gradient(135deg, var(--burgundy), var(--terracotta)) !important;
-                color: white !important;
-                border-radius: 18px 18px 4px 18px !important;
-                box-shadow: 0 4px 12px rgba(128, 0, 32, 0.3) !important;
-            }
-
-            openai-chatkit::part(message-assistant) {
-                background: linear-gradient(135deg, var(--deep-teal), var(--emerald)) !important;
-                color: white !important;
-                border-radius: 18px 18px 18px 4px !important;
-                box-shadow: 0 4px 12px rgba(38, 70, 83, 0.3) !important;
-            }
-
-            openai-chatkit::part(input) {
-                border: 2px solid var(--sage) !important;
-                border-radius: 25px !important;
-                padding: 12px 20px !important;
-                font-family: 'Lora', serif !important;
-            }
-
-            openai-chatkit::part(input):focus {
-                border-color: var(--deep-saffron) !important;
-                box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1) !important;
-            }
-
-            openai-chatkit::part(send-button) {
-                background: linear-gradient(135deg, var(--deep-saffron), var(--marigold)) !important;
-                border-radius: 50% !important;
-                color: white !important;
-            }
-
-            openai-chatkit::part(send-button):hover {
-                transform: scale(1.1) !important;
-                box-shadow: 0 4px 15px rgba(255, 107, 53, 0.5) !important;
-            }
-        `;
-        document.head.appendChild(style);
+        // ChatKit initialization code commented out
+        // Issue: CDN blocked by CORS on localhost
+        // Backend endpoint /api/chatkit/session is ready and working
+        // Will test in production environment
     </script>
+    -->
 </body>
 </html>

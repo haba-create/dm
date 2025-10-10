@@ -1,21 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const { OpenAI } = require('openai');
-const { Agent, Runner } = require('@openai/agents');
+const { Agent, run } = require('@openai/agents');
 
-// Lazy initialization of OpenAI client and agent
-let client = null;
+// Lazy initialization of agent
 let galleryAgent = null;
 
 function initializeAgent() {
   if (!galleryAgent) {
-    // Initialize OpenAI client
-    client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
     // Create the Gallery Agent
     galleryAgent = new Agent({
-  name: "Gallery Agent",
-  instructions: `You are Daamitha, a helpful and knowledgeable AI curator and assistant for Daamitha's art gallery.
+      name: "Gallery Agent",
+      instructions: `You are a helpful and knowledgeable AI curator and assistant for Daamitha's art gallery.
 
 About the Artist:
 - Daamitha is a contemporary oil painter based in London
@@ -33,11 +28,7 @@ Your Role:
 Website: https://www.daamitha.gallery/
 
 Be warm, knowledgeable, and enthusiastic about art. Speak with passion about the cultural heritage and stories behind each piece.`,
-  model: "gpt-4o", // Using gpt-4o instead of gpt-5 (which doesn't exist yet)
-  modelSettings: {
-    temperature: 0.7,
-    store: true
-  }
+      model: "gpt-5"
     });
   }
   return galleryAgent;
@@ -62,46 +53,25 @@ router.post('/chat', async (req, res) => {
     // Initialize agent if not already done
     const agent = initializeAgent();
 
-    // Build conversation history
-    const agentInput = [
-      ...conversationHistory.map(msg => ({
-        role: msg.role,
-        content: [{ type: 'input_text', text: msg.content }]
-      })),
-      {
-        role: 'user',
-        content: [{ type: 'input_text', text: message }]
-      }
-    ];
+    // Build full conversation context as a single string
+    let contextMessage = message;
 
-    // Create runner with trace metadata
-    const runner = new Runner({
-      traceMetadata: {
-        __trace_source__: 'gallery-chat',
-        workflow_id: process.env.CHATKIT_WORKFLOW_ID || 'custom-chat'
-      }
-    });
-
-    // Run the agent
-    const result = await runner.run(agent, agentInput);
-
-    if (!result.finalOutput) {
-      throw new Error('Agent did not return a response');
+    if (conversationHistory.length > 0) {
+      const conversationContext = conversationHistory
+        .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+        .join('\n');
+      contextMessage = `Previous conversation:\n${conversationContext}\n\nUser: ${message}`;
     }
 
-    // Extract new conversation items
-    const newMessages = result.newItems.map(item => ({
-      role: item.rawItem.role,
-      content: item.rawItem.content[0]?.text || ''
-    }));
+    // Run the agent with simple string input
+    const result = await run(agent, contextMessage);
 
     res.json({
       response: result.finalOutput,
       conversationHistory: [...conversationHistory,
         { role: 'user', content: message },
         { role: 'assistant', content: result.finalOutput }
-      ],
-      newItems: newMessages
+      ]
     });
 
   } catch (error) {
@@ -118,7 +88,7 @@ router.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     agent: 'Gallery Agent',
-    model: 'gpt-4o',
+    model: 'gpt-5',
     apiKeyConfigured: !!process.env.OPENAI_API_KEY,
     apiKeyLength: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0,
     nodeEnv: process.env.NODE_ENV || 'not set',

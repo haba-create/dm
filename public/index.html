@@ -583,15 +583,270 @@
             font-size: 1rem;
         }
 
-        /* Mobile Responsiveness */
+        /* Mobile Navigation */
+        .mobile-menu-toggle {
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 48px;
+            height: 48px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 12px;
+            position: relative;
+            z-index: 1002;
+        }
+
+        .hamburger-line {
+            width: 100%;
+            height: 3px;
+            background: var(--warm-ivory);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+            transform-origin: center;
+        }
+
+        .mobile-menu-toggle.active .hamburger-line:nth-child(1) {
+            transform: translateY(10.5px) rotate(45deg);
+        }
+
+        .mobile-menu-toggle.active .hamburger-line:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+
+        .mobile-menu-toggle.active .hamburger-line:nth-child(3) {
+            transform: translateY(-10.5px) rotate(-45deg);
+        }
+
+        .mobile-menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-menu-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 80%;
+            max-width: 400px;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--deep-teal) 0%, var(--burgundy) 100%);
+            z-index: 1001;
+            transition: right 0.4s ease;
+            overflow-y: auto;
+            padding: 100px 0 50px 0;
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .mobile-menu.active {
+            right: 0;
+        }
+
+        .mobile-nav-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .mobile-nav-links li {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .mobile-nav-links a {
+            display: block;
+            padding: 18px 30px;
+            color: var(--warm-ivory);
+            text-decoration: none;
+            font-size: 1.3rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 54px;
+            display: flex;
+            align-items: center;
+        }
+
+        .mobile-nav-links a:hover,
+        .mobile-nav-links a:active {
+            background: rgba(255, 255, 255, 0.15);
+            padding-left: 40px;
+            color: var(--marigold);
+        }
+
+        /* Enhanced Responsive Breakpoints */
+
+        /* Small Mobile (375px and below) */
+        @media (max-width: 375px) {
+            .hero h1 { font-size: 2.5rem; }
+            .hero-subtitle { font-size: 1.3rem; }
+            .hero-journey { font-size: 1rem; padding: 0.8rem 1.5rem; }
+            .logo { font-size: 1.5rem; }
+            .nav-container { padding: 0 0.75rem; }
+            .section-header h2 { font-size: 2rem; }
+            .about-text h2, .process-text h2, .heritage h2, .contact h2 { font-size: 2rem; }
+            .mobile-menu { width: 90%; }
+            .container { padding: 0 1rem; }
+        }
+
+        /* Mobile (376px to 576px) */
+        @media (min-width: 376px) and (max-width: 576px) {
+            .hero h1 { font-size: 2.8rem; }
+            .hero-subtitle { font-size: 1.5rem; }
+            .logo { font-size: 1.6rem; }
+            .gallery-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+        }
+
+        /* Tablet Portrait and Mobile (up to 768px) */
         @media (max-width: 768px) {
             .nav-links { display: none; }
-            .about-grid, .process-grid { grid-template-columns: 1fr; gap: 2rem; }
-            .gallery-grid { grid-template-columns: 1fr; }
+            .mobile-menu-toggle { display: flex; }
+
+            .nav-container {
+                padding: 0 1rem;
+            }
+
+            .logo {
+                font-size: 1.8rem;
+            }
+
+            .about-grid, .process-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .gallery-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
             .cultural-highlights { grid-template-columns: 1fr; }
             .contact-grid { grid-template-columns: 1fr; }
+
             .hero h1 { font-size: 3rem; }
-            .section-header h2, .about-text h2, .process-text h2, .heritage h2, .contact h2 { font-size: 2.5rem; }
+            .hero-subtitle { font-size: 1.6rem; }
+            .hero-journey { font-size: 1.2rem; }
+
+            .section-header h2, .about-text h2, .process-text h2, .heritage h2, .contact h2 {
+                font-size: 2.5rem;
+            }
+
+            .about-image img, .process-image {
+                height: 300px;
+            }
+
+            /* Touch target optimization */
+            .cta-button {
+                min-height: 48px;
+                min-width: 48px;
+                padding: 16px 40px;
+                font-size: 1rem;
+            }
+
+            .artwork-item {
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            }
+
+            .artwork-item:hover {
+                transform: translateY(-5px) rotate(0deg);
+            }
+
+            /* Stack process images on mobile */
+            .process-images {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Tablet Landscape (769px to 1024px) */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .nav-container {
+                padding: 0 1.5rem;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            .nav-links {
+                gap: 1.5rem;
+            }
+
+            .nav-links a {
+                font-size: 1rem;
+                padding: 6px 12px;
+            }
+
+            .hero h1 { font-size: 4.5rem; }
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 2.5rem;
+            }
+
+            .about-grid, .process-grid {
+                gap: 3rem;
+            }
+
+            .container {
+                padding: 0 1.5rem;
+            }
+
+            .section-header h2 {
+                font-size: 3rem;
+            }
+        }
+
+        /* Desktop (1025px to 1440px) */
+        @media (min-width: 1025px) and (max-width: 1440px) {
+            .container {
+                max-width: 1200px;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            }
+
+            .hero h1 { font-size: 5.5rem; }
+        }
+
+        /* Large Desktop (1441px and above) */
+        @media (min-width: 1441px) {
+            .container {
+                max-width: 1400px;
+            }
+
+            .hero h1 { font-size: 7rem; }
+
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+                gap: 3rem;
+            }
+
+            .section-header h2 {
+                font-size: 4.5rem;
+            }
+
+            .about-text h2, .process-text h2, .heritage h2, .contact h2 {
+                font-size: 4rem;
+            }
+        }
+
+        /* Prevent scroll when mobile menu is open */
+        body.mobile-menu-open {
+            overflow: hidden;
         }
 
         /* Smooth Scrolling */
@@ -618,6 +873,8 @@
     <nav>
         <div class="nav-container">
             <a href="#home" class="logo">Daamitha</a>
+
+            <!-- Desktop Navigation -->
             <ul class="nav-links">
                 <li><a href="#home">Home</a></li>
                 <li><a href="#about">Story</a></li>
@@ -628,7 +885,29 @@
                 <li><a href="/pricelist">Price List</a></li>
                 <li><a href="/admin/login.html" style="opacity: 0.7;">Admin</a></li>
             </ul>
+
+            <!-- Mobile Menu Toggle -->
+            <button class="mobile-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
         </div>
+    </nav>
+
+    <!-- Mobile Navigation Overlay & Menu -->
+    <div class="mobile-menu-overlay"></div>
+    <nav class="mobile-menu" aria-label="Mobile navigation">
+        <ul class="mobile-nav-links">
+            <li><a href="#home">🏠 Home</a></li>
+            <li><a href="#about">📖 Story</a></li>
+            <li><a href="#gallery">🎨 Gallery</a></li>
+            <li><a href="#process">✨ Process</a></li>
+            <li><a href="#heritage">🎵 Heritage</a></li>
+            <li><a href="#contact">💌 Acquire</a></li>
+            <li><a href="/pricelist">💰 Price List</a></li>
+            <li><a href="/admin/login.html" style="opacity: 0.7;">🔐 Admin</a></li>
+        </ul>
     </nav>
 
     <section id="home" class="hero">
@@ -757,6 +1036,58 @@
     </footer>
 
     <script>
+        // Mobile Navigation Toggle
+        (function() {
+            const mobileToggle = document.querySelector('.mobile-menu-toggle');
+            const mobileMenu = document.querySelector('.mobile-menu');
+            const mobileOverlay = document.querySelector('.mobile-menu-overlay');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-links a');
+            const body = document.body;
+
+            function openMobileMenu() {
+                mobileToggle.classList.add('active');
+                mobileMenu.classList.add('active');
+                mobileOverlay.classList.add('active');
+                body.classList.add('mobile-menu-open');
+                mobileToggle.setAttribute('aria-expanded', 'true');
+            }
+
+            function closeMobileMenu() {
+                mobileToggle.classList.remove('active');
+                mobileMenu.classList.remove('active');
+                mobileOverlay.classList.remove('active');
+                body.classList.remove('mobile-menu-open');
+                mobileToggle.setAttribute('aria-expanded', 'false');
+            }
+
+            // Toggle menu on button click
+            mobileToggle.addEventListener('click', () => {
+                const isOpen = mobileMenu.classList.contains('active');
+                if (isOpen) {
+                    closeMobileMenu();
+                } else {
+                    openMobileMenu();
+                }
+            });
+
+            // Close menu when clicking overlay
+            mobileOverlay.addEventListener('click', closeMobileMenu);
+
+            // Close menu when clicking a nav link
+            mobileNavLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    closeMobileMenu();
+                });
+            });
+
+            // Close menu on escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && mobileMenu.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+            });
+        })();
+
         // Smooth scrolling for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {

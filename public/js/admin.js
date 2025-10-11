@@ -1,5 +1,8 @@
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', initializeAdmin);
+
 // Check authentication on load
-window.addEventListener('load', async () => {
+async function initializeAdmin() {
     const token = localStorage.getItem('authToken');
     if (!token) {
         window.location.href = '/admin/login.html';
@@ -19,15 +22,19 @@ window.addEventListener('load', async () => {
 
         // Load initial data
         loadDashboard();
+        setupEventListeners();
     } catch (error) {
         localStorage.removeItem('authToken');
         localStorage.removeItem('user');
         window.location.href = '/admin/login.html';
     }
-});
+}
 
-// Navigation
-document.querySelectorAll('.nav-menu a').forEach(link => {
+// Setup all event listeners
+function setupEventListeners() {
+
+    // Navigation
+    document.querySelectorAll('.nav-menu a').forEach(link => {
     link.addEventListener('click', (e) => {
         e.preventDefault();
         const page = link.dataset.page;
@@ -58,7 +65,33 @@ document.querySelectorAll('.nav-menu a').forEach(link => {
                 break;
         }
     });
-});
+    });
+
+    // Handle Artwork Form Submission
+    const artworkForm = document.getElementById('artwork-form');
+    if (artworkForm) {
+        artworkForm.addEventListener('submit', handleArtworkSubmit);
+    }
+
+    // Handle Hero Form Submission
+    const heroForm = document.getElementById('hero-form');
+    if (heroForm) {
+        heroForm.addEventListener('submit', handleHeroSubmit);
+    }
+
+    // Handle About Form Submission
+    const aboutForm = document.getElementById('about-form');
+    if (aboutForm) {
+        aboutForm.addEventListener('submit', handleAboutSubmit);
+    }
+
+    // Click outside modal to close
+    window.addEventListener('click', (e) => {
+        if (e.target.id === 'artwork-modal') {
+            closeModal();
+        }
+    });
+}
 
 // Load Dashboard
 async function loadDashboard() {
@@ -282,7 +315,7 @@ function closeModal() {
 }
 
 // Handle Artwork Form Submission
-document.getElementById('artwork-form').addEventListener('submit', async (e) => {
+async function handleArtworkSubmit(e) {
     e.preventDefault();
 
     const token = localStorage.getItem('authToken');
@@ -317,10 +350,10 @@ document.getElementById('artwork-form').addEventListener('submit', async (e) => 
         console.error('Failed to save artwork:', error);
         alert('Failed to save artwork');
     }
-});
+}
 
 // Handle Hero Form Submission
-document.getElementById('hero-form').addEventListener('submit', async (e) => {
+async function handleHeroSubmit(e) {
     e.preventDefault();
 
     const token = localStorage.getItem('authToken');
@@ -349,10 +382,10 @@ document.getElementById('hero-form').addEventListener('submit', async (e) => {
         console.error('Failed to update hero:', error);
         alert('Failed to update hero section');
     }
-});
+}
 
 // Handle About Form Submission
-document.getElementById('about-form').addEventListener('submit', async (e) => {
+async function handleAboutSubmit(e) {
     e.preventDefault();
 
     const token = localStorage.getItem('authToken');
@@ -381,7 +414,7 @@ document.getElementById('about-form').addEventListener('submit', async (e) => {
         console.error('Failed to update about:', error);
         alert('Failed to update about section');
     }
-});
+}
 
 // Export Price List (placeholder)
 function exportPriceList() {
@@ -392,13 +425,7 @@ function exportPriceList() {
 // Logout
 function logout() {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('token'); // Also remove 'token' for backward compatibility
     localStorage.removeItem('user');
     window.location.href = '/admin/login.html';
 }
-
-// Click outside modal to close
-window.addEventListener('click', (e) => {
-    if (e.target.id === 'artwork-modal') {
-        closeModal();
-    }
-});

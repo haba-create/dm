@@ -6,7 +6,19 @@
   "scripts": {
     "start": "node server/app.js",
     "dev": "nodemon server/app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:auth": "playwright test tests/auth.spec.js",
+    "test:gallery": "playwright test tests/gallery.spec.js",
+    "test:crud": "playwright test tests/artwork-crud.spec.js",
+    "test:responsive": "playwright test tests/responsive.spec.js",
+    "test:chatbot": "playwright test tests/chatbot.spec.js",
+    "test:mobile": "playwright test --project='iPhone 13' --project='Pixel 5'",
+    "test:desktop": "playwright test --project='Desktop Chrome'",
+    "test:report": "playwright show-report",
+    "test:install": "playwright install --with-deps"
   },
   "keywords": [],
   "author": "",

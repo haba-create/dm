@@ -27,12 +27,19 @@
             box-sizing: border-box;
         }
 
+        html {
+            overflow-x: hidden;
+            width: 100%;
+        }
+
         body {
             font-family: 'Lora', serif;
             line-height: 1.7;
             color: var(--charcoal);
             background: var(--warm-ivory);
             padding: 2rem;
+            overflow-x: hidden;
+            width: 100%;
         }
 
         .container {
@@ -207,30 +214,190 @@
             }
         }
 
+        /* Table wrapper for horizontal scroll on mobile */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -1rem;
+            padding: 0 1rem;
+        }
+
         @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .container {
+                padding: 1.5rem;
+                border-radius: 15px;
+            }
+
+            .header {
+                margin-bottom: 2rem;
+                padding-bottom: 1.5rem;
+            }
+
             .header h1 {
-                font-size: 2rem;
+                font-size: 2.2rem;
             }
 
-            .price-table {
-                font-size: 0.9rem;
+            .header p {
+                font-size: 1rem;
             }
 
-            .price-table th,
-            .price-table td {
-                padding: 0.5rem;
+            .auth-required {
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
             }
 
-            .artwork-image {
-                width: 50px;
-                height: 50px;
+            .auth-required h2 {
+                font-size: 1.5rem;
+            }
+
+            .login-btn {
+                padding: 14px 28px;
+                min-height: 48px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
             }
 
             .back-link {
                 position: static;
                 display: block;
-                margin-bottom: 2rem;
+                margin-bottom: 1.5rem;
                 text-align: center;
+                padding: 12px 24px;
+                min-height: 48px;
+            }
+
+            /* Table becomes horizontally scrollable */
+            .table-wrapper {
+                margin: 0 -1.5rem;
+                padding: 0 1.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .price-table {
+                font-size: 0.85rem;
+                min-width: 700px; /* Forces horizontal scroll */
+            }
+
+            .price-table th {
+                padding: 0.8rem 0.5rem;
+                font-size: 0.95rem;
+                white-space: nowrap;
+            }
+
+            .price-table td {
+                padding: 0.8rem 0.5rem;
+            }
+
+            .artwork-image {
+                width: 60px !important;
+                height: 60px !important;
+            }
+
+            .footer-info {
+                margin-top: 2rem;
+                padding-top: 1.5rem;
+            }
+
+            .footer-info h3 {
+                font-size: 1.3rem;
+            }
+
+            .contact-info {
+                gap: 1.5rem;
+                font-size: 0.95rem;
+            }
+
+            .contact-info div {
+                flex: 1 1 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0.75rem;
+            }
+
+            .container {
+                padding: 1rem;
+                border-radius: 12px;
+            }
+
+            .header {
+                margin-bottom: 1.5rem;
+                padding-bottom: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .header p {
+                font-size: 0.95rem;
+            }
+
+            .auth-required {
+                padding: 1.25rem;
+                margin-bottom: 1rem;
+            }
+
+            .auth-required h2 {
+                font-size: 1.3rem;
+            }
+
+            .auth-required p {
+                font-size: 0.95rem;
+            }
+
+            .back-link {
+                margin-bottom: 1rem;
+                padding: 10px 20px;
+                font-size: 0.95rem;
+            }
+
+            .table-wrapper {
+                margin: 0 -1rem;
+                padding: 0 1rem;
+            }
+
+            .price-table {
+                font-size: 0.8rem;
+            }
+
+            .price-table th {
+                padding: 0.7rem 0.4rem;
+                font-size: 0.9rem;
+            }
+
+            .price-table td {
+                padding: 0.7rem 0.4rem;
+            }
+
+            .artwork-image {
+                width: 50px !important;
+                height: 50px !important;
+            }
+
+            .footer-info {
+                margin-top: 1.5rem;
+                padding-top: 1rem;
+            }
+
+            .footer-info h3 {
+                font-size: 1.2rem;
+            }
+
+            .footer-info p {
+                font-size: 0.9rem;
+            }
+
+            .contact-info {
+                gap: 1rem;
+                font-size: 0.9rem;
             }
         }
 
@@ -260,25 +427,27 @@
         </div>
 
         <div id="price-content" style="display: none;">
-            <table class="price-table">
-                <thead>
-                    <tr>
-                        <th>Image</th>
-                        <th>Title</th>
-                        <th>Artist</th>
-                        <th>Medium</th>
-                        <th>Dimensions</th>
-                        <th>Year</th>
-                        <th>Price (GBP)</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="pricelist-tbody">
-                    <tr>
-                        <td colspan="8" class="loading">Loading price list...</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table class="price-table">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Title</th>
+                            <th>Artist</th>
+                            <th>Medium</th>
+                            <th>Dimensions</th>
+                            <th>Year</th>
+                            <th>Price (GBP)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pricelist-tbody">
+                        <tr>
+                            <td colspan="8" class="loading">Loading price list...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
             <div class="footer-info">
                 <h3>Inquiries & Purchases</h3>

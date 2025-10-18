@@ -1,6 +1,13 @@
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', initializeAdmin);
 
+// Global state for artworks management
+let allArtworks = [];
+let filteredArtworks = [];
+let currentView = 'grid'; // 'grid' or 'table'
+let currentPage = 1;
+const itemsPerPage = 16;
+
 // Check authentication on load
 async function initializeAdmin() {
     const token = localStorage.getItem('authToken');
@@ -122,6 +129,66 @@ function setupEventListeners() {
             closeModal();
         }
     });
+
+    // Search and filter event listeners
+    const searchInput = document.getElementById('artwork-search');
+    const categoryFilter = document.getElementById('category-filter');
+    const availabilityFilter = document.getElementById('availability-filter');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', handleSearchFilter);
+    }
+    if (categoryFilter) {
+        categoryFilter.addEventListener('change', handleSearchFilter);
+    }
+    if (availabilityFilter) {
+        availabilityFilter.addEventListener('change', handleSearchFilter);
+    }
+
+    // Event delegation for dynamic elements
+    document.body.addEventListener('click', (e) => {
+        const target = e.target;
+        const action = target.dataset.action;
+
+        if (!action) return;
+
+        switch (action) {
+            case 'open-lightbox':
+                e.preventDefault();
+                window.openLightbox(target.dataset.image);
+                break;
+            case 'edit-artwork':
+                e.preventDefault();
+                window.editArtwork(parseInt(target.dataset.id));
+                break;
+            case 'delete-artwork':
+                e.preventDefault();
+                window.deleteArtwork(parseInt(target.dataset.id));
+                break;
+            case 'change-page':
+                e.preventDefault();
+                if (!target.disabled) {
+                    window.changePage(parseInt(target.dataset.page));
+                }
+                break;
+            case 'switch-view':
+                e.preventDefault();
+                window.switchView(target.dataset.view);
+                break;
+            case 'add-artwork':
+                e.preventDefault();
+                window.showAddArtwork();
+                break;
+            case 'close-modal':
+                e.preventDefault();
+                window.closeModal();
+                break;
+            case 'close-lightbox':
+                e.preventDefault();
+                window.closeLightbox();
+                break;
+        }
+    });
 }
 
 // Load Dashboard
@@ -180,30 +247,210 @@ async function loadArtworks() {
             }
         });
 
-        const artworks = await response.json();
-        const tbody = document.getElementById('artworks-table');
+        allArtworks = await response.json();
+        filteredArtworks = [...allArtworks];
 
-        if (artworks.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7">No artworks found. Add your first artwork!</td></tr>';
-        } else {
-            tbody.innerHTML = artworks.map(artwork => `
-                <tr>
-                    <td><img src="${artwork.image_path}" alt="${artwork.title}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;"></td>
-                    <td>${artwork.title}</td>
-                    <td>${artwork.artist}</td>
-                    <td>${artwork.year || '-'}</td>
-                    <td>£${artwork.price || 0}</td>
-                    <td>${artwork.available ? '✓' : '✗'}</td>
-                    <td>
-                        <button class="btn" onclick="editArtwork(${artwork.id})" style="margin-right: 0.5rem;">Edit</button>
-                        <button class="btn btn-danger" onclick="deleteArtwork(${artwork.id})">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
+        // Apply current filters
+        handleSearchFilter();
     } catch (error) {
         console.error('Failed to load artworks:', error);
     }
+}
+
+// Handle search and filter
+function handleSearchFilter() {
+    const searchTerm = document.getElementById('artwork-search')?.value.toLowerCase() || '';
+    const categoryFilter = document.getElementById('category-filter')?.value || 'all';
+    const availabilityFilter = document.getElementById('availability-filter')?.value || 'all';
+
+    filteredArtworks = allArtworks.filter(artwork => {
+        const matchesSearch = artwork.title.toLowerCase().includes(searchTerm) ||
+                             artwork.artist.toLowerCase().includes(searchTerm);
+        const matchesCategory = categoryFilter === 'all' || artwork.category === categoryFilter;
+        const matchesAvailability = availabilityFilter === 'all' ||
+                                   (availabilityFilter === 'available' && artwork.available) ||
+                                   (availabilityFilter === 'sold' && !artwork.available);
+
+        return matchesSearch && matchesCategory && matchesAvailability;
+    });
+
+    currentPage = 1; // Reset to first page when filtering
+    renderArtworks();
+}
+
+// Render artworks based on current view
+function renderArtworks() {
+    if (currentView === 'grid') {
+        renderGridView();
+    } else {
+        renderTableView();
+    }
+}
+
+// Render card grid view
+function renderGridView() {
+    const gridContainer = document.getElementById('artworks-grid');
+    const paginationContainer = document.getElementById('grid-pagination');
+
+    // Calculate pagination
+    const totalPages = Math.ceil(filteredArtworks.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedArtworks = filteredArtworks.slice(startIndex, endIndex);
+
+    // Render cards
+    if (paginatedArtworks.length === 0) {
+        gridContainer.innerHTML = '<div class="loading">No artworks found. Try adjusting your filters or add your first artwork!</div>';
+    } else {
+        gridContainer.innerHTML = paginatedArtworks.map(artwork => `
+            <div class="artwork-management-card">
+                <img src="${artwork.image_path}" alt="${artwork.title}" class="card-image" data-action="open-lightbox" data-image="${artwork.image_path}">
+                <div class="card-body">
+                    <h3 class="card-title">${artwork.title}</h3>
+                    <div class="card-details">
+                        <div class="card-detail-row">
+                            <span>${artwork.artist}</span>
+                            <span>${artwork.year || 'N/A'}</span>
+                        </div>
+                        <div class="card-detail-row">
+                            <span class="card-price">£${artwork.price || 0}</span>
+                            <span class="card-badge ${artwork.available ? 'badge-available' : 'badge-sold'}">
+                                ${artwork.available ? 'Available' : 'Sold'}
+                            </span>
+                        </div>
+                        ${artwork.technique ? `<div><small>${artwork.technique}</small></div>` : ''}
+                        ${artwork.dimensions ? `<div><small>${artwork.dimensions}</small></div>` : ''}
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-icon" data-action="edit-artwork" data-id="${artwork.id}">Edit</button>
+                        <button class="btn btn-danger btn-icon" data-action="delete-artwork" data-id="${artwork.id}">Delete</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Render pagination
+    renderPagination(paginationContainer, totalPages);
+}
+
+// Render table view
+function renderTableView() {
+    const tbody = document.getElementById('artworks-table');
+    const paginationContainer = document.getElementById('table-pagination');
+
+    // Calculate pagination
+    const totalPages = Math.ceil(filteredArtworks.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedArtworks = filteredArtworks.slice(startIndex, endIndex);
+
+    // Render table rows
+    if (paginatedArtworks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="loading">No artworks found. Try adjusting your filters or add your first artwork!</td></tr>';
+    } else {
+        tbody.innerHTML = paginatedArtworks.map(artwork => `
+            <tr>
+                <td><img src="${artwork.image_path}" alt="${artwork.title}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;" data-action="open-lightbox" data-image="${artwork.image_path}"></td>
+                <td>${artwork.title}</td>
+                <td>${artwork.artist}</td>
+                <td>${artwork.year || '-'}</td>
+                <td>£${artwork.price || 0}</td>
+                <td>${artwork.available ? '✓' : '✗'}</td>
+                <td>
+                    <button class="btn" data-action="edit-artwork" data-id="${artwork.id}" style="margin-right: 0.5rem;">Edit</button>
+                    <button class="btn btn-danger" data-action="delete-artwork" data-id="${artwork.id}">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // Render pagination
+    renderPagination(paginationContainer, totalPages);
+}
+
+// Render pagination controls
+function renderPagination(container, totalPages) {
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    const startItem = (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, filteredArtworks.length);
+
+    let paginationHTML = `
+        <button data-action="change-page" data-page="1" ${currentPage === 1 ? 'disabled' : ''}>First</button>
+        <button data-action="change-page" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>Prev</button>
+    `;
+
+    // Show page numbers (max 5 visible)
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + 4);
+
+    if (endPage - startPage < 4) {
+        startPage = Math.max(1, endPage - 4);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        paginationHTML += `<button class="${i === currentPage ? 'active' : ''}" data-action="change-page" data-page="${i}">${i}</button>`;
+    }
+
+    paginationHTML += `
+        <button data-action="change-page" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>
+        <button data-action="change-page" data-page="${totalPages}" ${currentPage === totalPages ? 'disabled' : ''}>Last</button>
+        <span class="pagination-info">${startItem}-${endItem} of ${filteredArtworks.length}</span>
+    `;
+
+    container.innerHTML = paginationHTML;
+}
+
+// Change page (global for inline onclick handlers)
+window.changePage = function(page) {
+    currentPage = page;
+    renderArtworks();
+    // Scroll to top of artworks section
+    const artworksPage = document.getElementById('artworks-page');
+    if (artworksPage) {
+        artworksPage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+// Switch between grid and table view (global for inline onclick handlers)
+window.switchView = function(view) {
+    currentView = view;
+
+    // Update button states
+    const gridBtn = document.getElementById('grid-view-btn');
+    const tableBtn = document.getElementById('table-view-btn');
+
+    if (view === 'grid') {
+        gridBtn.classList.add('active');
+        tableBtn.classList.remove('active');
+    } else {
+        gridBtn.classList.remove('active');
+        tableBtn.classList.add('active');
+    }
+
+    // Show/hide containers
+    document.getElementById('artworks-grid-container').style.display = view === 'grid' ? 'block' : 'none';
+    document.getElementById('artworks-table-container').style.display = view === 'table' ? 'block' : 'none';
+
+    // Render current view
+    renderArtworks();
+}
+
+// Lightbox functions (global for inline onclick handlers)
+window.openLightbox = function(imagePath) {
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImage = document.getElementById('lightbox-image');
+
+    lightboxImage.src = imagePath;
+    lightbox.style.display = 'flex';
+}
+
+window.closeLightbox = function() {
+    document.getElementById('lightbox').style.display = 'none';
 }
 
 // Load Content
@@ -270,14 +517,22 @@ async function loadPriceList() {
 }
 
 // Show Add Artwork Modal
-function showAddArtwork() {
+window.showAddArtwork = function() {
     document.getElementById('modal-title').textContent = 'Add New Artwork';
     document.getElementById('artwork-form').reset();
+    delete document.getElementById('artwork-form').dataset.artworkId;
+
+    // Hide image preview
+    const previewContainer = document.getElementById('image-preview-container');
+    if (previewContainer) {
+        previewContainer.style.display = 'none';
+    }
+
     document.getElementById('artwork-modal').style.display = 'flex';
 }
 
-// Edit Artwork
-async function editArtwork(id) {
+// Edit Artwork (global for inline onclick handlers)
+window.editArtwork = async function(id) {
     const token = localStorage.getItem('authToken');
 
     try {
@@ -302,6 +557,17 @@ async function editArtwork(id) {
         form.elements.description.value = artwork.description || '';
         form.elements.available.checked = artwork.available;
 
+        // Show current image
+        if (artwork.image_path) {
+            const preview = document.getElementById('image-preview');
+            const filename = document.getElementById('image-filename');
+            const previewContainer = document.getElementById('image-preview-container');
+
+            preview.src = artwork.image_path;
+            filename.textContent = `Current image: ${artwork.image_path.split('/').pop()}`;
+            previewContainer.style.display = 'block';
+        }
+
         form.dataset.artworkId = id;
         document.getElementById('artwork-modal').style.display = 'flex';
     } catch (error) {
@@ -310,8 +576,8 @@ async function editArtwork(id) {
     }
 }
 
-// Delete Artwork
-async function deleteArtwork(id) {
+// Delete Artwork (global for inline onclick handlers)
+window.deleteArtwork = async function(id) {
     if (!confirm('Are you sure you want to delete this artwork?')) {
         return;
     }
@@ -331,18 +597,45 @@ async function deleteArtwork(id) {
         }
 
         alert('Artwork deleted successfully');
-        loadArtworks();
+        await loadArtworks();
+        await loadDashboard();
     } catch (error) {
         console.error('Failed to delete artwork:', error);
         alert('Failed to delete artwork');
     }
 }
 
-// Close Modal
-function closeModal() {
+// Close Modal (global for inline onclick handlers)
+window.closeModal = function() {
     document.getElementById('artwork-modal').style.display = 'none';
     document.getElementById('artwork-form').reset();
     delete document.getElementById('artwork-form').dataset.artworkId;
+
+    // Hide image preview
+    const previewContainer = document.getElementById('image-preview-container');
+    if (previewContainer) {
+        previewContainer.style.display = 'none';
+    }
+}
+
+// Preview image before upload (global for inline onchange handler)
+window.previewImage = function(event) {
+    const file = event.target.files[0];
+    const previewContainer = document.getElementById('image-preview-container');
+    const preview = document.getElementById('image-preview');
+    const filename = document.getElementById('image-filename');
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            filename.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+            previewContainer.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        previewContainer.style.display = 'none';
+    }
 }
 
 // Handle Artwork Form Submission
@@ -375,8 +668,8 @@ async function handleArtworkSubmit(e) {
 
         alert(artworkId ? 'Artwork updated successfully' : 'Artwork added successfully');
         closeModal();
-        loadArtworks();
-        loadDashboard();
+        await loadArtworks();
+        await loadDashboard();
     } catch (error) {
         console.error('Failed to save artwork:', error);
         alert('Failed to save artwork');

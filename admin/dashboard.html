@@ -290,6 +290,250 @@
             color: var(--deep-saffron);
         }
 
+        /* Enhanced Card Grid for Artworks Management */
+        .view-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .view-toggle button {
+            padding: 0.6rem 1.2rem;
+            background: var(--rich-cream);
+            border: 2px solid var(--rich-cream);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--charcoal);
+            font-family: 'Lora', serif;
+            min-height: 44px;
+        }
+
+        .view-toggle button.active {
+            background: var(--deep-saffron);
+            border-color: var(--deep-saffron);
+            color: white;
+        }
+
+        .search-filter-bar {
+            display: flex;
+            gap: 1rem;
+            flex: 1;
+            max-width: 800px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.8rem 1rem;
+            border: 2px solid var(--rich-cream);
+            border-radius: 10px;
+            font-family: 'Lora', serif;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--deep-saffron);
+        }
+
+        .filter-select {
+            padding: 0.8rem 1rem;
+            border: 2px solid var(--rich-cream);
+            border-radius: 10px;
+            font-family: 'Lora', serif;
+            background: white;
+            cursor: pointer;
+        }
+
+        /* Enhanced Artwork Card Grid */
+        .artworks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .artwork-management-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .artwork-management-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+
+        .artwork-management-card .card-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .artwork-management-card:hover .card-image {
+            transform: scale(1.05);
+        }
+
+        .artwork-management-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .artwork-management-card .card-title {
+            font-family: 'Crimson Text', serif;
+            font-size: 1.4rem;
+            color: var(--burgundy);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .artwork-management-card .card-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: var(--charcoal);
+            font-size: 0.95rem;
+        }
+
+        .artwork-management-card .card-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .artwork-management-card .card-price {
+            font-size: 1.3rem;
+            color: var(--deep-saffron);
+            font-weight: 600;
+        }
+
+        .artwork-management-card .card-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .artwork-management-card .badge-available {
+            background: rgba(45, 80, 22, 0.1);
+            color: var(--emerald);
+        }
+
+        .artwork-management-card .badge-sold {
+            background: rgba(128, 0, 32, 0.1);
+            color: var(--burgundy);
+        }
+
+        .artwork-management-card .card-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .artwork-management-card .btn-icon {
+            flex: 1;
+            padding: 0.7rem;
+            font-size: 0.9rem;
+            border-radius: 10px;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            padding: 0.6rem 1rem;
+            background: white;
+            border: 2px solid var(--rich-cream);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--charcoal);
+            font-family: 'Lora', serif;
+            min-width: 44px;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            border-color: var(--deep-saffron);
+            color: var(--deep-saffron);
+        }
+
+        .pagination button.active {
+            background: var(--deep-saffron);
+            border-color: var(--deep-saffron);
+            color: white;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            color: var(--charcoal);
+            font-size: 0.95rem;
+            padding: 0 1rem;
+        }
+
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            color: white;
+            font-size: 3rem;
+            cursor: pointer;
+            z-index: 2001;
+            line-height: 1;
+            padding: 0.5rem;
+        }
+
+        .lightbox-close:hover {
+            color: var(--marigold);
+        }
+
         /* Mobile Sidebar Toggle */
         .mobile-sidebar-toggle {
             display: none;
@@ -429,6 +673,29 @@
                 gap: 1rem;
             }
 
+            .artworks-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .view-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-filter-bar {
+                max-width: 100%;
+                flex-direction: column;
+            }
+
+            .view-toggle {
+                width: 100%;
+            }
+
+            .view-toggle button {
+                flex: 1;
+            }
+
             .modal-content {
                 width: 95%;
                 padding: 1.5rem;
@@ -555,7 +822,7 @@
             <div id="overview-page">
                 <div class="header">
                     <h1>Dashboard Overview</h1>
-                    <button class="btn" onclick="showAddArtwork()">+ Add New Artwork</button>
+                    <button class="btn" data-action="add-artwork">+ Add New Artwork</button>
                 </div>
 
                 <div class="stats-grid">
@@ -588,27 +855,62 @@
             <div id="artworks-page" style="display: none;">
                 <div class="header">
                     <h1>Manage Artworks</h1>
-                    <button class="btn" onclick="showAddArtwork()">+ Add New Artwork</button>
+                    <button class="btn" data-action="add-artwork">+ Add New Artwork</button>
+                </div>
+
+                <div class="view-controls">
+                    <div class="search-filter-bar">
+                        <input type="text" class="search-input" id="artwork-search" placeholder="Search by title or artist...">
+                        <select class="filter-select" id="category-filter">
+                            <option value="all">All Categories</option>
+                            <option value="Contemporary">Contemporary</option>
+                            <option value="Animals">Animals</option>
+                            <option value="Nature">Nature</option>
+                            <option value="Abstract">Abstract</option>
+                            <option value="Portrait">Portrait</option>
+                        </select>
+                        <select class="filter-select" id="availability-filter">
+                            <option value="all">All Status</option>
+                            <option value="available">Available</option>
+                            <option value="sold">Sold</option>
+                        </select>
+                    </div>
+                    <div class="view-toggle">
+                        <button id="grid-view-btn" class="active" data-action="switch-view" data-view="grid">Grid</button>
+                        <button id="table-view-btn" data-action="switch-view" data-view="table">Table</button>
+                    </div>
                 </div>
 
                 <div class="recent-section">
-                    <div class="table-wrapper">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Image</th>
-                                    <th>Title</th>
-                                    <th>Artist</th>
-                                    <th>Year</th>
-                                    <th>Price</th>
-                                    <th>Available</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="artworks-table">
-                                <tr><td colspan="7" class="loading">Loading artworks...</td></tr>
-                            </tbody>
-                        </table>
+                    <!-- Card Grid View (Default) -->
+                    <div id="artworks-grid-container">
+                        <div class="artworks-grid" id="artworks-grid">
+                            <div class="loading">Loading artworks...</div>
+                        </div>
+                        <div class="pagination" id="grid-pagination"></div>
+                    </div>
+
+                    <!-- Table View (Alternative) -->
+                    <div id="artworks-table-container" style="display: none;">
+                        <div class="table-wrapper">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Image</th>
+                                        <th>Title</th>
+                                        <th>Artist</th>
+                                        <th>Year</th>
+                                        <th>Price</th>
+                                        <th>Available</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="artworks-table">
+                                    <tr><td colspan="7" class="loading">Loading artworks...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination" id="table-pagination"></div>
                     </div>
                 </div>
             </div>
@@ -728,7 +1030,11 @@
                 </div>
                 <div class="form-group">
                     <label>Image</label>
-                    <input type="file" name="image" accept="image/*">
+                    <input type="file" name="image" accept="image/*" id="image-upload" onchange="previewImage(event)">
+                    <div id="image-preview-container" style="margin-top: 1rem; display: none;">
+                        <img id="image-preview" style="max-width: 100%; max-height: 300px; border-radius: 10px; object-fit: contain;">
+                        <p id="image-filename" style="margin-top: 0.5rem; color: var(--charcoal); font-size: 0.9rem;"></p>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>
@@ -736,11 +1042,17 @@
                     </label>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+                    <button type="button" class="btn" data-action="close-modal">Cancel</button>
                     <button type="submit" class="btn">Save Artwork</button>
                 </div>
             </form>
         </div>
+    </div>
+
+    <!-- Lightbox for full-size images -->
+    <div id="lightbox" class="lightbox" data-action="close-lightbox">
+        <span class="lightbox-close" data-action="close-lightbox">&times;</span>
+        <img id="lightbox-image" src="" alt="Full size image">
     </div>
 
     <script src="/js/admin.js"></script>

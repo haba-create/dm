@@ -34,6 +34,8 @@ const initializeDatabase = () => {
                 description TEXT,
                 category TEXT,
                 available INTEGER DEFAULT 1,
+                featured INTEGER DEFAULT 0,
+                display_order INTEGER DEFAULT 0,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
@@ -144,9 +146,10 @@ const initializeDatabase = () => {
                 dimensions: '30" × 24"',
                 year: 2024,
                 price: 1800,
-                image_path: '/images/abstract.wolf&woman.jpg',
+                image_path: '/abstract.wolf&woman.jpg',
                 description: 'Inspired by a painting done by Dimitra Milan',
-                category: 'Contemporary'
+                category: 'Contemporary',
+                featured: 1
             },
             {
                 title: 'Deep within thought',
@@ -154,9 +157,10 @@ const initializeDatabase = () => {
                 dimensions: '36" × 28"',
                 year: 2024,
                 price: 2400,
-                image_path: '/images/cat-oils.jpg',
+                image_path: '/cat-oils.jpg',
                 description: 'An original artwork, capturing a cat staring off into the distance deep within thought',
-                category: 'Animals'
+                category: 'Animals',
+                featured: 1
             },
             {
                 title: 'Treetop Reverie',
@@ -164,9 +168,10 @@ const initializeDatabase = () => {
                 dimensions: '24" × 20"',
                 year: 2023,
                 price: 1400,
-                image_path: '/images/monkey-oils.jpg',
+                image_path: '/monkey-oils.jpg',
                 description: 'An original piece, depicting the playful nature of 3 chimps within their habitat. A photo was used as a reference to help create this piece',
-                category: 'Animals'
+                category: 'Animals',
+                featured: 1
             },
             {
                 title: 'Feathered Jewel',
@@ -174,9 +179,10 @@ const initializeDatabase = () => {
                 dimensions: '32" × 26"',
                 year: 2024,
                 price: 2000,
-                image_path: '/images/peacock-feather.jpg',
+                image_path: '/peacock-feather.jpg',
                 description: 'Capturing the elegance and intricacy of a peacock feather',
-                category: 'Nature'
+                category: 'Nature',
+                featured: 1
             },
             {
                 title: "Mother's Love",
@@ -184,9 +190,10 @@ const initializeDatabase = () => {
                 dimensions: '22" × 18"',
                 year: 2024,
                 price: 1600,
-                image_path: '/images/penguins.jpg',
+                image_path: '/penguins.jpg',
                 description: 'Capturing the raw emotion between a mother and a child',
-                category: 'Animals'
+                category: 'Animals',
+                featured: 1
             },
             {
                 title: "Predator's gaze",
@@ -194,9 +201,10 @@ const initializeDatabase = () => {
                 dimensions: '28" × 22"',
                 year: 2024,
                 price: 1700,
-                image_path: '/images/tiger.jpg',
+                image_path: '/tiger.jpg',
                 description: 'An original artwork using a photo taken by David Whelan as a reference',
-                category: 'Animals'
+                category: 'Animals',
+                featured: 1
             }
         ];
 
@@ -205,12 +213,12 @@ const initializeDatabase = () => {
             if (row && row.count === 0) {
                 initialArtworks.forEach(artwork => {
                     db.run(
-                        `INSERT INTO artworks (title, artist, technique, dimensions, year, price, image_path, description, category)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                        [artwork.title, 'Daamitha', artwork.technique, artwork.dimensions, artwork.year, artwork.price, artwork.image_path, artwork.description, artwork.category]
+                        `INSERT INTO artworks (title, artist, technique, dimensions, year, price, image_path, description, category, featured)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [artwork.title, 'Daamitha', artwork.technique, artwork.dimensions, artwork.year, artwork.price, artwork.image_path, artwork.description, artwork.category, artwork.featured]
                     );
                 });
-                console.log('Initial artworks added to database');
+                console.log('Initial artworks added to database (6 featured on homepage)');
             }
         });
     });

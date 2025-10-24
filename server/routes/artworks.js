@@ -36,10 +36,18 @@ const upload = multer({
 // Get all artworks (public route - no prices for public)
 router.get('/', (req, res) => {
     const isAuthenticated = req.header('Authorization');
+    const featuredOnly = req.query.featured === 'true';
 
-    const query = isAuthenticated
-        ? "SELECT * FROM artworks ORDER BY created_at DESC"
-        : "SELECT id, title, artist, technique, dimensions, year, image_path, description, category, available FROM artworks WHERE available = 1 ORDER BY created_at DESC";
+    let query;
+    if (isAuthenticated) {
+        query = featuredOnly
+            ? "SELECT * FROM artworks WHERE featured = 1 ORDER BY created_at DESC"
+            : "SELECT * FROM artworks ORDER BY created_at DESC";
+    } else {
+        query = featuredOnly
+            ? "SELECT id, title, artist, technique, dimensions, year, image_path, description, category, available FROM artworks WHERE available = 1 AND featured = 1 ORDER BY created_at DESC LIMIT 6"
+            : "SELECT id, title, artist, technique, dimensions, year, image_path, description, category, available FROM artworks WHERE available = 1 ORDER BY created_at DESC";
+    }
 
     db.all(query, [], (err, rows) => {
         if (err) {
@@ -78,6 +86,44 @@ router.get('/admin/pricelist', authMiddleware, (req, res) => {
     });
 });
 
+// Toggle featured status (admin only)
+router.patch('/:id/featured', authMiddleware, (req, res) => {
+    const { featured } = req.body;
+    const artworkId = req.params.id;
+
+    // First check how many artworks are currently featured
+    db.get("SELECT COUNT(*) as count FROM artworks WHERE featured = 1", [], (err, row) => {
+        if (err) {
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        // If trying to feature and already have 6, reject
+        if (featured && row.count >= 6) {
+            return res.status(400).json({
+                error: 'Maximum of 6 featured artworks reached. Please unfeature another artwork first.'
+            });
+        }
+
+        // Update featured status
+        db.run(
+            "UPDATE artworks SET featured = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            [featured ? 1 : 0, artworkId],
+            function(err) {
+                if (err) {
+                    return res.status(500).json({ error: 'Failed to update featured status' });
+                }
+                if (this.changes === 0) {
+                    return res.status(404).json({ error: 'Artwork not found' });
+                }
+                res.json({
+                    message: featured ? 'Artwork featured on homepage' : 'Artwork removed from homepage',
+                    featured: featured ? 1 : 0
+                });
+            }
+        );
+    });
+});
+
 // Create new artwork (admin only)
 router.post('/', authMiddleware, upload.single('image'), (req, res) => {
     const {
@@ -89,15 +135,16 @@ router.post('/', authMiddleware, upload.single('image'), (req, res) => {
         price,
         description,
         category,
-        available = 1
+        available = 1,
+        featured = 0
     } = req.body;
 
     const imagePath = req.file ? `/uploads/artworks/${req.file.filename}` : null;
 
     db.run(
-        `INSERT INTO artworks (title, artist, technique, dimensions, year, price, image_path, description, category, available)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [title, artist, technique, dimensions, year, price, imagePath, description, category, available],
+        `INSERT INTO artworks (title, artist, technique, dimensions, year, price, image_path, description, category, available, featured)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [title, artist, technique, dimensions, year, price, imagePath, description, category, available, featured],
         function(err) {
             if (err) {
                 return res.status(500).json({ error: 'Failed to create artwork' });
@@ -130,7 +177,8 @@ router.put('/:id', authMiddleware, upload.single('image'), (req, res) => {
         price,
         description,
         category,
-        available
+        available,
+        featured
     } = req.body;
 
     // First get the current artwork to handle image update
@@ -152,10 +200,10 @@ router.put('/:id', authMiddleware, upload.single('image'), (req, res) => {
         db.run(
             `UPDATE artworks
              SET title = ?, artist = ?, technique = ?, dimensions = ?, year = ?,
-                 price = ?, image_path = ?, description = ?, category = ?, available = ?,
+                 price = ?, image_path = ?, description = ?, category = ?, available = ?, featured = ?,
                  updated_at = CURRENT_TIMESTAMP
              WHERE id = ?`,
-            [title, artist, technique, dimensions, year, price, imagePath, description, category, available, req.params.id],
+            [title, artist, technique, dimensions, year, price, imagePath, description, category, available, featured, req.params.id],
             function(err) {
                 if (err) {
                     return res.status(500).json({ error: 'Failed to update artwork' });

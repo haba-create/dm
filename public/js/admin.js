@@ -157,6 +157,10 @@ function setupEventListeners() {
                 e.preventDefault();
                 window.openLightbox(target.dataset.image);
                 break;
+            case 'toggle-featured':
+                e.preventDefault();
+                window.toggleFeatured(parseInt(target.dataset.id), target.dataset.featured === '1');
+                break;
             case 'edit-artwork':
                 e.preventDefault();
                 window.editArtwork(parseInt(target.dataset.id));
@@ -303,7 +307,8 @@ function renderGridView() {
         gridContainer.innerHTML = '<div class="loading">No artworks found. Try adjusting your filters or add your first artwork!</div>';
     } else {
         gridContainer.innerHTML = paginatedArtworks.map(artwork => `
-            <div class="artwork-management-card">
+            <div class="artwork-management-card ${artwork.featured ? 'featured-artwork' : ''}">
+                ${artwork.featured ? '<span class="featured-badge">⭐ Featured on Homepage</span>' : ''}
                 <img src="${artwork.image_path}" alt="${artwork.title}" class="card-image" data-action="open-lightbox" data-image="${artwork.image_path}">
                 <div class="card-body">
                     <h3 class="card-title">${artwork.title}</h3>
@@ -322,6 +327,13 @@ function renderGridView() {
                         ${artwork.dimensions ? `<div><small>${artwork.dimensions}</small></div>` : ''}
                     </div>
                     <div class="card-actions">
+                        <button class="btn ${artwork.featured ? 'btn-warning' : 'btn-success'} btn-icon"
+                                data-action="toggle-featured"
+                                data-id="${artwork.id}"
+                                data-featured="${artwork.featured ? '1' : '0'}"
+                                title="${artwork.featured ? 'Remove from homepage' : 'Add to homepage'}">
+                            ${artwork.featured ? '★ Featured' : '☆ Feature'}
+                        </button>
                         <button class="btn btn-icon" data-action="edit-artwork" data-id="${artwork.id}">Edit</button>
                         <button class="btn btn-danger btn-icon" data-action="delete-artwork" data-id="${artwork.id}">Delete</button>
                     </div>
@@ -602,6 +614,36 @@ window.deleteArtwork = async function(id) {
     } catch (error) {
         console.error('Failed to delete artwork:', error);
         alert('Failed to delete artwork');
+    }
+}
+
+// Toggle Featured Status (global for inline onclick handlers)
+window.toggleFeatured = async function(id, currentFeatured) {
+    const newFeatured = !currentFeatured;
+    const token = localStorage.getItem('authToken');
+
+    try {
+        const response = await fetch(`/api/artworks/${id}/featured`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ featured: newFeatured })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to update featured status');
+        }
+
+        alert(data.message);
+        await loadArtworks();
+        await loadDashboard();
+    } catch (error) {
+        console.error('Failed to toggle featured:', error);
+        alert(error.message || 'Failed to update featured status');
     }
 }
 

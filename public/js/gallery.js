@@ -7,7 +7,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 // Load gallery artworks
 async function loadGalleryData() {
     try {
-        const response = await fetch('/api/artworks');
+        const response = await fetch('/api/artworks?featured=true');
         const artworks = await response.json();
 
         const galleryGrid = document.querySelector('.gallery-grid');
@@ -21,7 +21,7 @@ async function loadGalleryData() {
         // Generate artwork HTML (without prices for public view)
         galleryGrid.innerHTML = artworks.map(artwork => `
             <div class="artwork-item fade-in">
-                <img src="${artwork.image_path}" alt="${artwork.title}" class="artwork-image">
+                <img src="${artwork.image_path}" alt="${artwork.title}" class="artwork-image" loading="lazy">
                 <div class="artwork-info">
                     <h3 class="artwork-title">${artwork.title}</h3>
                     <p class="artwork-details">

@@ -45,8 +45,8 @@ router.get('/', (req, res) => {
             : "SELECT * FROM artworks ORDER BY created_at DESC";
     } else {
         query = featuredOnly
-            ? "SELECT id, title, artist, technique, dimensions, year, image_path, description, category, available FROM artworks WHERE available = 1 AND featured = 1 ORDER BY created_at DESC LIMIT 6"
-            : "SELECT id, title, artist, technique, dimensions, year, image_path, description, category, available FROM artworks WHERE available = 1 ORDER BY created_at DESC";
+            ? "SELECT id, title, artist, technique, dimensions, year, image_path, description, category, available, featured FROM artworks WHERE available = 1 AND featured = 1 ORDER BY created_at DESC LIMIT 6"
+            : "SELECT id, title, artist, technique, dimensions, year, image_path, description, category, available, featured FROM artworks WHERE available = 1 ORDER BY created_at DESC";
     }
 
     db.all(query, [], (err, rows) => {

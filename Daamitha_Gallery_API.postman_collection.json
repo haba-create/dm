@@ -1,0 +1,506 @@
+{
+  "info": {
+    "name": "Daamitha Gallery API",
+    "description": "Complete API collection for Daamitha's gallery management system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('authToken', jsonData.token);",
+                  "    pm.environment.set('authToken', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@daamitha.art\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Admin login endpoint. Returns JWT token valid for 24 hours."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "verify"]
+            },
+            "description": "Verify if the current JWT token is valid."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Artworks - Public",
+      "item": [
+        {
+          "name": "Get All Public Artworks",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/artworks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "artworks"]
+            },
+            "description": "Get all available artworks (no prices, no auth required)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Featured Artworks Only",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/artworks?featured=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "artworks"],
+              "query": [
+                {
+                  "key": "featured",
+                  "value": "true",
+                  "description": "Filter to show only featured artworks (max 6)"
+                }
+              ]
+            },
+            "description": "Get only the 6 featured artworks displayed on homepage."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Artwork",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/artworks/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "artworks", "1"]
+            },
+            "description": "Get a single artwork by ID (no price, no auth required)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Artworks - Admin",
+      "item": [
+        {
+          "name": "Get All Artworks (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/artworks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "artworks"]
+            },
+            "description": "Get all artworks with prices (requires authentication)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pricelist (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/artworks/admin/pricelist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "artworks", "admin", "pricelist"]
+            },
+            "description": "Get all artworks with prices for admin pricelist page."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Artwork",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "title",
+                  "value": "New Artwork Title",
+                  "type": "text"
+                },
+                {
+                  "key": "artist",
+                  "value": "Daamitha",
+                  "type": "text"
+                },
+                {
+                  "key": "technique",
+                  "value": "Oil on canvas",
+                  "type": "text"
+                },
+                {
+                  "key": "dimensions",
+                  "value": "24\" × 30\"",
+                  "type": "text"
+                },
+                {
+                  "key": "year",
+                  "value": "2024",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "1500",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Description of the artwork",
+                  "type": "text"
+                },
+                {
+                  "key": "category",
+                  "value": "Contemporary",
+                  "type": "text"
+                },
+                {
+                  "key": "available",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "featured",
+                  "value": "0",
+                  "type": "text",
+                  "description": "Set to 1 to feature on homepage (max 6 total)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/artworks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "artworks"]
+            },
+            "description": "Create new artwork with image upload. Image is uploaded to /uploads/artworks/."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Artwork",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": [],
+                  "description": "Optional - only include if replacing image"
+                },
+                {
+                  "key": "title",
+                  "value": "Updated Title",
+                  "type": "text"
+                },
+                {
+                  "key": "technique",
+                  "value": "Oil on linen canvas",
+                  "type": "text"
+                },
+                {
+                  "key": "dimensions",
+                  "value": "30\" × 24\"",
+                  "type": "text"
+                },
+                {
+                  "key": "year",
+                  "value": "2024",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "1800",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Updated description",
+                  "type": "text"
+                },
+                {
+                  "key": "category",
+                  "value": "Contemporary",
+                  "type": "text"
+                },
+                {
+                  "key": "available",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "featured",
+                  "value": "0",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/artworks/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "artworks", "1"]
+            },
+            "description": "Update existing artwork. Include image only if replacing it."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Artwork",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/artworks/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "artworks", "1"]
+            },
+            "description": "Delete artwork and its associated image file."
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Featured Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"featured\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/artworks/1/featured",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "artworks", "1", "featured"]
+            },
+            "description": "Toggle featured status (max 6 featured artworks allowed)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Content Management",
+      "item": [
+        {
+          "name": "Get Hero Content",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/content/hero",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "content", "hero"]
+            },
+            "description": "Get hero section content (title, subtitle, CTA)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get About Content",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/content/about",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "content", "about"]
+            },
+            "description": "Get about section content."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Process Content",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/content/process",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "content", "process"]
+            },
+            "description": "Get process section content."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Hero Content (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Welcome to Daamitha's Art\",\n  \"subtitle\": \"Contemporary Oil Paintings\",\n  \"cta_text\": \"Explore Gallery\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/content/hero",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "content", "hero"]
+            },
+            "description": "Update hero section content (requires authentication)."
+          },
+          "response": []
+        },
+        {
+          "name": "Update About Content (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"heading\": \"About the Artist\",\n  \"text\": \"Updated about text...\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/content/about",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "content", "about"]
+            },
+            "description": "Update about section content (requires authentication)."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Process Content (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"heading\": \"My Process\",\n  \"text\": \"Updated process description...\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/content/process",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "content", "process"]
+            },
+            "description": "Update process section content (requires authentication)."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

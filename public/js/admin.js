@@ -1,4 +1,5 @@
 // Wait for DOM to be ready
+console.log('📊 Admin.js script loaded');
 document.addEventListener('DOMContentLoaded', initializeAdmin);
 
 // Global state for artworks management
@@ -103,6 +104,27 @@ function setupEventListeners() {
                 }
             });
         });
+    }
+
+    // Logout Button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            console.log('Logout button clicked');
+            try {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                console.log('Auth tokens cleared, redirecting to login...');
+                window.location.href = '/admin/login.html';
+            } catch (error) {
+                console.error('Error during logout:', error);
+                // Force redirect even if localStorage fails
+                window.location.href = '/admin/login.html';
+            }
+        });
+    } else {
+        console.warn('Logout button not found in DOM');
     }
 
     // Handle Artwork Form Submission
@@ -786,25 +808,4 @@ async function handleAboutSubmit(e) {
 function exportPriceList() {
     alert('PDF export will be implemented in the next phase. For now, you can use browser print (Ctrl+P) to save as PDF.');
     window.print();
-}
-
-// Logout - exposed on window for onclick handler
-window.logout = function() {
-    console.log('Logout function called');
-    try {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('token'); // Also remove 'token' for backward compatibility
-        localStorage.removeItem('user');
-        console.log('Tokens cleared, redirecting to login...');
-        window.location.href = '/admin/login.html';
-    } catch (error) {
-        console.error('Error during logout:', error);
-        // Force redirect even if there's an error
-        window.location.href = '/admin/login.html';
-    }
-}
-
-// Also define as regular function for compatibility
-function logout() {
-    window.logout();
 }

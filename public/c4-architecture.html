@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daamitha Gallery - C4 Architecture Diagram</title>
+    <script>
+        // Log page load
+        console.log('C4 Architecture page loading...');
+        console.log('User Agent:', navigator.userAgent);
+        console.log('Window location:', window.location.href);
+
+        // Global error handler
+        window.addEventListener('error', function(e) {
+            console.error('Page error:', e.message, 'at', e.filename, 'line', e.lineno);
+        }, true);
+
+        // Log when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ C4 Architecture page DOM ready');
+        });
+    </script>
     <style>
         * {
             margin: 0;
@@ -518,19 +534,29 @@
 
     <script>
         try {
-            console.log('C4 Architecture page loaded');
+            console.log('🏗️ Initializing C4 Architecture diagrams...');
 
             // Tab switching
             const tabs = document.querySelectorAll('.tab');
             const diagrams = document.querySelectorAll('.diagram-container');
 
+            console.log('Found ' + tabs.length + ' tabs and ' + diagrams.length + ' diagram containers');
+
             if (tabs.length === 0) {
-                console.error('No tabs found');
+                console.error('❌ ERROR: No tabs found in DOM');
+                throw new Error('Tab elements not found - check HTML structure');
             }
 
-            tabs.forEach(tab => {
+            if (diagrams.length === 0) {
+                console.error('❌ ERROR: No diagram containers found in DOM');
+                throw new Error('Diagram container elements not found - check HTML structure');
+            }
+
+            tabs.forEach((tab, index) => {
+                console.log('Setting up tab ' + (index + 1) + ': level-' + tab.dataset.level);
                 tab.addEventListener('click', () => {
                     const level = tab.dataset.level;
+                    console.log('Tab clicked: level-' + level);
 
                     // Update active tab
                     tabs.forEach(t => t.classList.remove('active'));
@@ -538,14 +564,21 @@
 
                     // Show corresponding diagram
                     diagrams.forEach(d => d.classList.remove('active'));
-                    document.getElementById(`level-${level}`).classList.add('active');
+                    const targetDiagram = document.getElementById(`level-${level}`);
+                    if (targetDiagram) {
+                        targetDiagram.classList.add('active');
+                        console.log('✅ Switched to level-' + level);
+                    } else {
+                        console.error('❌ Could not find diagram for level-' + level);
+                    }
                 });
             });
 
-            console.log('C4 Architecture initialized successfully');
+            console.log('✅ C4 Architecture initialized successfully');
         } catch (error) {
-            console.error('Error initializing C4 Architecture page:', error);
-            document.body.innerHTML += '<div style="color: #FFD700; text-align: center; padding: 3rem; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.2rem; background: rgba(0,0,0,0.8); padding: 2rem; border-radius: 10px;">⚠️ Error loading page: ' + error.message + '</div>';
+            console.error('❌ FATAL ERROR initializing C4 Architecture page:', error);
+            console.error('Error stack:', error.stack);
+            document.body.innerHTML += '<div style="color: #FF6B6B; text-align: center; padding: 3rem; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.2rem; background: rgba(0,0,0,0.9); padding: 2rem; border-radius: 10px; max-width: 600px;"><h2>⚠️ Page Error</h2><p style="margin-top: 1rem;">Failed to initialize C4 Architecture page</p><p style="color: #FFD700; margin-top: 1rem; font-family: monospace; font-size: 0.9rem;">' + error.message + '</p><p style="margin-top: 1rem; font-size: 0.9rem;">Check browser console (F12) for details</p></div>';
         }
     </script>
 </body>

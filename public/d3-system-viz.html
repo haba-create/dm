@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daamitha Gallery - System Visualization</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        // Error handling for D3.js loading
+        window.addEventListener('error', function(e) {
+            if (e.filename && e.filename.includes('d3')) {
+                console.error('Failed to load D3.js from CDN:', e);
+                const viz = document.getElementById('visualization');
+                if (viz) {
+                    viz.innerHTML = '<div style="color: #FF6B6B; text-align: center; padding: 3rem; font-size: 1.2rem; background: rgba(255,107,107,0.1); border-radius: 10px; margin: 2rem;"><h2>⚠️ Failed to Load D3.js</h2><p style="margin-top: 1rem;">The D3.js library could not be loaded from the CDN.</p><p>This may be due to:</p><ul style="list-style: none; margin-top: 1rem;"><li>• Content Security Policy restrictions</li><li>• Network connectivity issues</li><li>• CDN availability</li></ul><p style="margin-top: 1rem; color: #FFD700;">Check the browser console (F12) for details.</p></div>';
+                }
+            }
+        }, true);
+
+        // Log when page loads
+        console.log('D3 System Visualization page loaded');
+        console.log('User Agent:', navigator.userAgent);
+    </script>
     <style>
         * {
             margin: 0;
@@ -184,10 +200,14 @@
     <script>
         // Check if D3 is loaded
         if (typeof d3 === 'undefined') {
-            document.getElementById('visualization').innerHTML = '<div style="color: #FFD700; text-align: center; padding: 3rem; font-size: 1.2rem;">⚠️ D3.js failed to load. Please check your internet connection and refresh the page.</div>';
-            console.error('D3.js not loaded');
+            console.error('❌ D3.js not loaded - library failed to load from CDN');
+            console.error('This could be due to:');
+            console.error('1. Content Security Policy blocking d3js.org');
+            console.error('2. Network connectivity issues');
+            console.error('3. CDN downtime');
+            document.getElementById('visualization').innerHTML = '<div style="color: #FF6B6B; text-align: center; padding: 3rem; font-size: 1.2rem; background: rgba(255,107,107,0.1); border-radius: 10px; margin: 2rem;"><h2>⚠️ D3.js Library Not Loaded</h2><p style="margin-top: 1rem;">The visualization cannot render because D3.js failed to load.</p><p style="margin-top: 1rem; color: #FFD700;">Check browser console (F12) for details.</p></div>';
         } else {
-            console.log('D3.js loaded successfully');
+            console.log('✅ D3.js loaded successfully (version: ' + d3.version + ')');
         }
 
         try {

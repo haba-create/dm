@@ -517,23 +517,36 @@
     </div>
 
     <script>
-        // Tab switching
-        const tabs = document.querySelectorAll('.tab');
-        const diagrams = document.querySelectorAll('.diagram-container');
+        try {
+            console.log('C4 Architecture page loaded');
 
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                const level = tab.dataset.level;
+            // Tab switching
+            const tabs = document.querySelectorAll('.tab');
+            const diagrams = document.querySelectorAll('.diagram-container');
 
-                // Update active tab
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
+            if (tabs.length === 0) {
+                console.error('No tabs found');
+            }
 
-                // Show corresponding diagram
-                diagrams.forEach(d => d.classList.remove('active'));
-                document.getElementById(`level-${level}`).classList.add('active');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const level = tab.dataset.level;
+
+                    // Update active tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    // Show corresponding diagram
+                    diagrams.forEach(d => d.classList.remove('active'));
+                    document.getElementById(`level-${level}`).classList.add('active');
+                });
             });
-        });
+
+            console.log('C4 Architecture initialized successfully');
+        } catch (error) {
+            console.error('Error initializing C4 Architecture page:', error);
+            document.body.innerHTML += '<div style="color: #FFD700; text-align: center; padding: 3rem; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.2rem; background: rgba(0,0,0,0.8); padding: 2rem; border-radius: 10px;">⚠️ Error loading page: ' + error.message + '</div>';
+        }
     </script>
 </body>
 </html>

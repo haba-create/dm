@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daamitha Gallery - C4 Architecture Diagram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            color: #fff;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: #FFD700;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            color: #ccc;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: #FFD700;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border: 2px solid #FFD700;
+            border-radius: 5px;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: #FFD700;
+            color: #0f0c29;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .tab:hover {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #FFD700;
+        }
+
+        .tab.active {
+            background: #FFD700;
+            color: #0f0c29;
+            border-color: #FFD700;
+        }
+
+        .diagram-container {
+            display: none;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .diagram-container.active {
+            display: block;
+        }
+
+        .diagram-title {
+            font-size: 1.8rem;
+            color: #FFD700;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .diagram {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        /* C4 Component Styles */
+        .c4-box {
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+
+        .c4-person {
+            background: #08427B;
+            color: white;
+            text-align: center;
+            max-width: 200px;
+            margin: 0 auto;
+        }
+
+        .c4-system {
+            background: #1168BD;
+            color: white;
+            text-align: center;
+        }
+
+        .c4-external {
+            background: #999999;
+            color: white;
+            text-align: center;
+        }
+
+        .c4-container {
+            background: #438DD5;
+            color: white;
+        }
+
+        .c4-component {
+            background: #85BBF0;
+            color: #000;
+        }
+
+        .c4-database {
+            background: #FFD93D;
+            color: #000;
+        }
+
+        .c4-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .c4-type {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .c4-description {
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .diagram-grid {
+            display: grid;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .level-1 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        .level-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .level-3 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .arrow {
+            text-align: center;
+            color: #FFD700;
+            font-size: 2rem;
+            margin: 1rem 0;
+        }
+
+        .relationship {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .legend {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .legend-title {
+            font-size: 1.2rem;
+            color: #FFD700;
+            margin-bottom: 1rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.8rem;
+            color: #fff;
+        }
+
+        .legend-box {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            margin-right: 1rem;
+        }
+
+        .flow-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .flow-row {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+
+            .flow-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="back-link">← Back to Gallery</a>
+        <h1>C4 Architecture Model</h1>
+        <p class="subtitle">Multi-level System Architecture Diagrams</p>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" data-level="1">Level 1: System Context</div>
+        <div class="tab" data-level="2">Level 2: Container</div>
+        <div class="tab" data-level="3">Level 3: Component</div>
+    </div>
+
+    <!-- Level 1: System Context -->
+    <div class="diagram-container active" id="level-1">
+        <h2 class="diagram-title">Level 1: System Context Diagram</h2>
+        <div class="diagram">
+            <div class="flow-container">
+                <div class="c4-box c4-person">
+                    <div class="c4-title">Gallery Visitor</div>
+                    <div class="c4-type">[Person]</div>
+                    <div class="c4-description">Public user viewing artworks and learning about the artist</div>
+                </div>
+
+                <div class="arrow">↓</div>
+                <div class="relationship">Views gallery, explores artworks</div>
+
+                <div class="c4-box c4-system">
+                    <div class="c4-title">Daamitha Gallery System</div>
+                    <div class="c4-type">[Software System]</div>
+                    <div class="c4-description">
+                        Web-based gallery management system for displaying contemporary oil paintings,
+                        managing artwork inventory, and providing artist information. Features dynamic
+                        content, featured artwork selection, and admin dashboard.
+                    </div>
+                </div>
+
+                <div class="arrow">↑</div>
+                <div class="relationship">Manages content, uploads artworks, updates prices</div>
+
+                <div class="c4-box c4-person">
+                    <div class="c4-title">Gallery Administrator</div>
+                    <div class="c4-type">[Person]</div>
+                    <div class="c4-description">Admin user managing artworks, content, and featured gallery items</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-title">System Context Elements</div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #08427B;"></div>
+                <span><strong>Person:</strong> Users who interact with the system (visitors, administrators)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #1168BD;"></div>
+                <span><strong>Software System:</strong> The Daamitha Gallery system being documented</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level 2: Container -->
+    <div class="diagram-container" id="level-2">
+        <h2 class="diagram-title">Level 2: Container Diagram</h2>
+        <div class="diagram">
+            <div class="flow-container">
+                <!-- Users -->
+                <div class="flow-row">
+                    <div class="c4-box c4-person" style="max-width: 180px;">
+                        <div class="c4-title">Visitor</div>
+                        <div class="c4-type">[Person]</div>
+                    </div>
+                    <div class="c4-box c4-person" style="max-width: 180px;">
+                        <div class="c4-title">Admin</div>
+                        <div class="c4-type">[Person]</div>
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <!-- Web Applications -->
+                <div class="flow-row">
+                    <div class="c4-box c4-container" style="max-width: 350px;">
+                        <div class="c4-title">Public Gallery Website</div>
+                        <div class="c4-type">[Container: HTML/CSS/JavaScript]</div>
+                        <div class="c4-description">
+                            Responsive single-page application displaying featured artworks,
+                            artist bio, and creative process. Built with vanilla JavaScript
+                            and modern CSS.
+                        </div>
+                    </div>
+                    <div class="c4-box c4-container" style="max-width: 350px;">
+                        <div class="c4-title">Admin Dashboard</div>
+                        <div class="c4-type">[Container: HTML/CSS/JavaScript]</div>
+                        <div class="c4-description">
+                            Protected admin interface for managing artworks, uploading images,
+                            toggling featured status, and editing site content.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <!-- API Layer -->
+                <div class="c4-box c4-container">
+                    <div class="c4-title">REST API</div>
+                    <div class="c4-type">[Container: Node.js + Express]</div>
+                    <div class="c4-description">
+                        RESTful API providing artwork data, authentication, content management,
+                        and file upload capabilities. Protected routes require JWT authentication.
+                        Handles featured artwork limit enforcement (max 6).
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <!-- Data Layer -->
+                <div class="flow-row">
+                    <div class="c4-box c4-database" style="max-width: 350px;">
+                        <div class="c4-title">SQLite Database</div>
+                        <div class="c4-type">[Container: SQLite]</div>
+                        <div class="c4-description">
+                            Stores artwork metadata, user accounts, site content, and featured
+                            status. Tables: artworks, users, site_content.
+                        </div>
+                    </div>
+                    <div class="c4-box c4-database" style="max-width: 350px;">
+                        <div class="c4-title">File Storage</div>
+                        <div class="c4-type">[Container: Filesystem]</div>
+                        <div class="c4-description">
+                            Stores uploaded artwork images in /uploads/artworks/ and legacy
+                            images in root directory served via /images/ route.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-title">Container Elements</div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #08427B;"></div>
+                <span><strong>Person:</strong> System users</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #438DD5;"></div>
+                <span><strong>Container:</strong> Separately deployable/executable units (web apps, APIs)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #FFD93D;"></div>
+                <span><strong>Database/Storage:</strong> Data storage containers</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level 3: Component -->
+    <div class="diagram-container" id="level-3">
+        <h2 class="diagram-title">Level 3: Component Diagram (REST API)</h2>
+        <div class="diagram">
+            <div class="diagram-grid level-3">
+                <!-- Routes Layer -->
+                <div>
+                    <h3 style="color: #FFD700; margin-bottom: 1rem;">API Routes</h3>
+
+                    <div class="c4-box c4-component">
+                        <div class="c4-title">Auth Routes</div>
+                        <div class="c4-type">[Component: Express Router]</div>
+                        <div class="c4-description">
+                            POST /api/auth/login - Admin login<br>
+                            GET /api/auth/verify - Token validation
+                        </div>
+                    </div>
+
+                    <div class="c4-box c4-component">
+                        <div class="c4-title">Artwork Routes</div>
+                        <div class="c4-type">[Component: Express Router]</div>
+                        <div class="c4-description">
+                            GET /api/artworks - List all/featured<br>
+                            POST /api/artworks - Create with upload<br>
+                            PUT /api/artworks/:id - Update<br>
+                            DELETE /api/artworks/:id - Delete<br>
+                            PATCH /api/artworks/:id/featured - Toggle
+                        </div>
+                    </div>
+
+                    <div class="c4-box c4-component">
+                        <div class="c4-title">Content Routes</div>
+                        <div class="c4-type">[Component: Express Router]</div>
+                        <div class="c4-description">
+                            GET /api/content/:section - Get content<br>
+                            PUT /api/content/:section - Update content
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Middleware & Data Layer -->
+                <div>
+                    <h3 style="color: #FFD700; margin-bottom: 1rem;">Middleware & Data</h3>
+
+                    <div class="c4-box c4-component">
+                        <div class="c4-title">Auth Middleware</div>
+                        <div class="c4-type">[Component: Express Middleware]</div>
+                        <div class="c4-description">
+                            JWT verification for protected routes.
+                            Validates Bearer tokens and extracts user data.
+                        </div>
+                    </div>
+
+                    <div class="c4-box c4-component">
+                        <div class="c4-title">File Upload Handler</div>
+                        <div class="c4-type">[Component: Multer Middleware]</div>
+                        <div class="c4-description">
+                            Handles multipart/form-data uploads.
+                            Validates file types (images only), generates
+                            unique filenames, saves to /uploads/artworks/.
+                        </div>
+                    </div>
+
+                    <div class="c4-box c4-database">
+                        <div class="c4-title">Database Models</div>
+                        <div class="c4-type">[Component: SQLite Queries]</div>
+                        <div class="c4-description">
+                            Schema initialization, seed data, and query
+                            methods for artworks, users, and site_content tables.
+                        </div>
+                    </div>
+
+                    <div class="c4-box c4-component">
+                        <div class="c4-title">Static File Server</div>
+                        <div class="c4-type">[Component: Express Static]</div>
+                        <div class="c4-description">
+                            /images/* → Root directory (legacy)<br>
+                            /uploads/* → Uploads directory<br>
+                            / → Public directory
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(255, 215, 0, 0.1); border-left: 4px solid #FFD700; border-radius: 4px; color: #333;">
+                <h4 style="color: #FFD700; margin-bottom: 0.5rem;">Key Business Logic</h4>
+                <p style="color: #333;"><strong>Featured Artwork Limit:</strong> Maximum 6 artworks can be featured at once. The PATCH /featured endpoint enforces this by checking the count before allowing new items to be featured.</p>
+                <p style="color: #333; margin-top: 0.5rem;"><strong>Image Management:</strong> When an artwork is deleted, both the database record and the physical image file are removed to prevent orphaned files.</p>
+                <p style="color: #333; margin-top: 0.5rem;"><strong>Public vs Admin APIs:</strong> Public endpoints exclude prices and only show available artworks. Admin endpoints require JWT authentication and return full data.</p>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-title">Component Elements</div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #85BBF0;"></div>
+                <span><strong>Component:</strong> Individual code modules within containers (routes, middleware, handlers)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #FFD93D;"></div>
+                <span><strong>Database:</strong> Data access layer components</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        const tabs = document.querySelectorAll('.tab');
+        const diagrams = document.querySelectorAll('.diagram-container');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const level = tab.dataset.level;
+
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Show corresponding diagram
+                diagrams.forEach(d => d.classList.remove('active'));
+                document.getElementById(`level-${level}`).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

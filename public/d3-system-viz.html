@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daamitha Gallery - System Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: #FFD700;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            color: #ccc;
+            font-size: 1.1rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: #FFD700;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border: 2px solid #FFD700;
+            border-radius: 5px;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: #FFD700;
+            color: #1a1a2e;
+        }
+
+        #visualization {
+            width: 100%;
+            height: 700px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .node {
+            cursor: pointer;
+        }
+
+        .node circle {
+            stroke-width: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .node:hover circle {
+            stroke-width: 5px;
+            filter: brightness(1.2);
+        }
+
+        .node text {
+            font-size: 12px;
+            font-weight: 600;
+            pointer-events: none;
+        }
+
+        .link {
+            fill: none;
+            stroke-width: 2px;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+
+        .link:hover {
+            opacity: 1;
+            stroke-width: 3px;
+        }
+
+        .legend {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .legend-title {
+            font-size: 1.2rem;
+            color: #FFD700;
+            margin-bottom: 1rem;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            border: 2px solid #fff;
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .info-panel h3 {
+            color: #FFD700;
+            margin-bottom: 1rem;
+        }
+
+        .info-panel p {
+            line-height: 1.6;
+            color: #ddd;
+            margin-bottom: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="back-link">← Back to Gallery</a>
+        <h1>Gallery System Architecture</h1>
+        <p class="subtitle">Interactive Data Flow Visualization</p>
+    </div>
+
+    <div id="visualization"></div>
+
+    <div class="legend">
+        <div class="legend-title">Component Types</div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #4ECDC4;"></div>
+            <span>Frontend</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #FF6B6B;"></div>
+            <span>Backend API</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #FFD93D;"></div>
+            <span>Database</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #95E1D3;"></div>
+            <span>Storage</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #AA96DA;"></div>
+            <span>Authentication</span>
+        </div>
+    </div>
+
+    <div class="info-panel">
+        <h3>How It Works</h3>
+        <p><strong>Click and drag</strong> nodes to rearrange the visualization.</p>
+        <p><strong>Hover</strong> over nodes to highlight them and see their connections.</p>
+        <p>The arrows show the direction of data flow through the system, from user interactions through the API to data storage and back.</p>
+    </div>
+
+    <script>
+        // System architecture data
+        const data = {
+            nodes: [
+                // Frontend
+                { id: 'public', label: 'Public\nGallery', type: 'frontend', color: '#4ECDC4' },
+                { id: 'admin', label: 'Admin\nDashboard', type: 'frontend', color: '#4ECDC4' },
+
+                // API Layer
+                { id: 'auth-api', label: 'Auth\nAPI', type: 'api', color: '#FF6B6B' },
+                { id: 'artwork-api', label: 'Artwork\nAPI', type: 'api', color: '#FF6B6B' },
+                { id: 'content-api', label: 'Content\nAPI', type: 'api', color: '#FF6B6B' },
+
+                // Middleware
+                { id: 'jwt-auth', label: 'JWT\nMiddleware', type: 'auth', color: '#AA96DA' },
+
+                // Database
+                { id: 'sqlite', label: 'SQLite\nDatabase', type: 'database', color: '#FFD93D' },
+
+                // Storage
+                { id: 'images-legacy', label: 'Legacy\nImages', type: 'storage', color: '#95E1D3' },
+                { id: 'uploads', label: 'Uploaded\nArtworks', type: 'storage', color: '#95E1D3' },
+            ],
+            links: [
+                // Public gallery connections
+                { source: 'public', target: 'artwork-api', label: 'GET featured' },
+                { source: 'public', target: 'content-api', label: 'GET content' },
+                { source: 'artwork-api', target: 'sqlite', label: 'Query' },
+                { source: 'content-api', target: 'sqlite', label: 'Query' },
+                { source: 'sqlite', target: 'images-legacy', label: 'Image path' },
+
+                // Admin dashboard connections
+                { source: 'admin', target: 'auth-api', label: 'Login' },
+                { source: 'auth-api', target: 'sqlite', label: 'Verify user' },
+                { source: 'auth-api', target: 'jwt-auth', label: 'Generate token' },
+
+                // Authenticated admin operations
+                { source: 'admin', target: 'jwt-auth', label: 'Auth token' },
+                { source: 'jwt-auth', target: 'artwork-api', label: 'Authorized' },
+                { source: 'jwt-auth', target: 'content-api', label: 'Authorized' },
+
+                // CRUD operations
+                { source: 'admin', target: 'artwork-api', label: 'CRUD' },
+                { source: 'admin', target: 'content-api', label: 'Update' },
+                { source: 'artwork-api', target: 'uploads', label: 'Save image' },
+                { source: 'artwork-api', target: 'sqlite', label: 'Save metadata' },
+            ]
+        };
+
+        // Set up SVG
+        const width = document.getElementById('visualization').offsetWidth;
+        const height = 700;
+
+        const svg = d3.select('#visualization')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height);
+
+        // Add arrow markers
+        svg.append('defs').selectAll('marker')
+            .data(['end'])
+            .enter().append('marker')
+            .attr('id', 'arrowhead')
+            .attr('viewBox', '0 -5 10 10')
+            .attr('refX', 25)
+            .attr('refY', 0)
+            .attr('markerWidth', 6)
+            .attr('markerHeight', 6)
+            .attr('orient', 'auto')
+            .append('path')
+            .attr('d', 'M0,-5L10,0L0,5')
+            .attr('fill', '#fff')
+            .attr('opacity', 0.6);
+
+        // Create force simulation
+        const simulation = d3.forceSimulation(data.nodes)
+            .force('link', d3.forceLink(data.links)
+                .id(d => d.id)
+                .distance(150))
+            .force('charge', d3.forceManyBody().strength(-800))
+            .force('center', d3.forceCenter(width / 2, height / 2))
+            .force('collision', d3.forceCollide().radius(60));
+
+        // Create links
+        const link = svg.append('g')
+            .selectAll('path')
+            .data(data.links)
+            .enter().append('path')
+            .attr('class', 'link')
+            .attr('stroke', '#fff')
+            .attr('marker-end', 'url(#arrowhead)');
+
+        // Create nodes
+        const node = svg.append('g')
+            .selectAll('g')
+            .data(data.nodes)
+            .enter().append('g')
+            .attr('class', 'node')
+            .call(d3.drag()
+                .on('start', dragstarted)
+                .on('drag', dragged)
+                .on('end', dragended));
+
+        // Add circles to nodes
+        node.append('circle')
+            .attr('r', 40)
+            .attr('fill', d => d.color)
+            .attr('stroke', '#fff');
+
+        // Add labels to nodes
+        node.append('text')
+            .attr('text-anchor', 'middle')
+            .attr('dy', '.35em')
+            .attr('fill', '#fff')
+            .style('text-shadow', '1px 1px 2px rgba(0,0,0,0.8)')
+            .selectAll('tspan')
+            .data(d => d.label.split('\n'))
+            .enter().append('tspan')
+            .attr('x', 0)
+            .attr('dy', (d, i) => i ? '1.2em' : 0)
+            .text(d => d);
+
+        // Update positions on each tick
+        simulation.on('tick', () => {
+            link.attr('d', d => {
+                const dx = d.target.x - d.source.x;
+                const dy = d.target.y - d.source.y;
+                const dr = Math.sqrt(dx * dx + dy * dy);
+                return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+            });
+
+            node.attr('transform', d => `translate(${d.x},${d.y})`);
+        });
+
+        // Drag functions
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+
+        // Highlight on hover
+        node.on('mouseover', function(event, d) {
+            d3.select(this).select('circle')
+                .transition()
+                .duration(200)
+                .attr('r', 50);
+
+            // Highlight connected links
+            link.style('opacity', l =>
+                (l.source.id === d.id || l.target.id === d.id) ? 1 : 0.2
+            );
+        })
+        .on('mouseout', function() {
+            d3.select(this).select('circle')
+                .transition()
+                .duration(200)
+                .attr('r', 40);
+
+            link.style('opacity', 0.6);
+        });
+    </script>
+</body>
+</html>

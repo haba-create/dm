@@ -182,8 +182,17 @@
     </div>
 
     <script>
-        // System architecture data
-        const data = {
+        // Check if D3 is loaded
+        if (typeof d3 === 'undefined') {
+            document.getElementById('visualization').innerHTML = '<div style="color: #FFD700; text-align: center; padding: 3rem; font-size: 1.2rem;">⚠️ D3.js failed to load. Please check your internet connection and refresh the page.</div>';
+            console.error('D3.js not loaded');
+        } else {
+            console.log('D3.js loaded successfully');
+        }
+
+        try {
+            // System architecture data
+            const data = {
             nodes: [
                 // Frontend
                 { id: 'public', label: 'Public\nGallery', type: 'frontend', color: '#4ECDC4' },
@@ -353,6 +362,10 @@
 
             link.style('opacity', 0.6);
         });
+        } catch (error) {
+            console.error('Error rendering D3 visualization:', error);
+            document.getElementById('visualization').innerHTML = '<div style="color: #FFD700; text-align: center; padding: 3rem; font-size: 1.2rem;">⚠️ Error rendering visualization: ' + error.message + '</div>';
+        }
     </script>
 </body>
 </html>

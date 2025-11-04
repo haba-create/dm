@@ -788,10 +788,23 @@ function exportPriceList() {
     window.print();
 }
 
-// Logout
+// Logout - exposed on window for onclick handler
+window.logout = function() {
+    console.log('Logout function called');
+    try {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('token'); // Also remove 'token' for backward compatibility
+        localStorage.removeItem('user');
+        console.log('Tokens cleared, redirecting to login...');
+        window.location.href = '/admin/login.html';
+    } catch (error) {
+        console.error('Error during logout:', error);
+        // Force redirect even if there's an error
+        window.location.href = '/admin/login.html';
+    }
+}
+
+// Also define as regular function for compatibility
 function logout() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('token'); // Also remove 'token' for backward compatibility
-    localStorage.removeItem('user');
-    window.location.href = '/admin/login.html';
+    window.logout();
 }

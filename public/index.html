@@ -1229,15 +1229,29 @@
             color: var(--warm-ivory);
             padding: 20px;
             font-family: 'Crimson Text', serif;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: 600;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        #chat-header::before {
-            content: '🎨 ';
+        #chat-header .header-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        #chat-header .header-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        #chat-header .header-subtitle {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            font-family: 'Lora', serif;
+            font-style: italic;
         }
 
         #chat-close {
@@ -1294,6 +1308,45 @@
 
         .chat-message.assistant.typing {
             background: linear-gradient(135deg, var(--sage), var(--emerald));
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 0;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.7);
+            animation: typing-bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing-bounce {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.7;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
         }
 
         #chat-input-area {
@@ -1500,12 +1553,15 @@
         <button id="chat-button" aria-label="Open chat">💬</button>
         <div id="chat-window">
             <div id="chat-header">
-                Gallery Assistant
+                <div class="header-content">
+                    <div class="header-title">🎨 Daamitha</div>
+                    <div class="header-subtitle">Contemporary Oil Painter</div>
+                </div>
                 <button id="chat-close" aria-label="Close chat">×</button>
             </div>
             <div id="chat-messages">
                 <div class="chat-message assistant">
-                    Namaste! 🎨 I'm here to help you explore Daamitha's oil painting collection. Ask me about her artworks, artistic journey, or anything else!
+                    Namaste! I'm Daamitha, and I'm so glad you're here. Feel free to ask me about my paintings, my artistic journey between India and London, or anything else you'd like to know about my work. 🎨
                 </div>
             </div>
             <div id="chat-input-area">
@@ -1555,14 +1611,15 @@
                 isProcessing = true;
                 chatSend.disabled = true;
 
-                // Create placeholder for streaming response
+                // Create placeholder for streaming response with typing indicator
                 const responseDiv = document.createElement('div');
-                responseDiv.className = 'chat-message assistant';
-                responseDiv.textContent = ''; // Empty initially
+                responseDiv.className = 'chat-message assistant typing';
+                responseDiv.innerHTML = '<span class="typing-indicator"><span></span><span></span><span></span></span>';
                 chatMessages.appendChild(responseDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
 
                 let fullResponse = '';
+                let buffer = ''; // Buffer for incomplete SSE messages
 
                 try {
                     const response = await fetch('/api/agent/chat-stream', {
@@ -1583,47 +1640,62 @@
                     // Read the stream
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder();
+                    let isFirstChunk = true;
 
                     while (true) {
                         const { done, value } = await reader.read();
 
                         if (done) break;
 
-                        // Decode the chunk
-                        const chunk = decoder.decode(value);
+                        // Decode the chunk with streaming enabled
+                        const chunk = decoder.decode(value, { stream: true });
+                        buffer += chunk;
 
-                        // Parse SSE format (data: {...}\n\n)
-                        const lines = chunk.split('\n');
-                        for (const line of lines) {
-                            if (line.startsWith('data: ')) {
-                                try {
-                                    const data = JSON.parse(line.substring(6));
+                        // Process complete SSE messages (ending with \n\n)
+                        const parts = buffer.split('\n\n');
+                        // Keep the last part in the buffer if it's incomplete
+                        buffer = parts.pop() || '';
 
-                                    if (data.error) {
-                                        throw new Error(data.message || 'Stream error');
-                                    }
+                        for (const part of parts) {
+                            const lines = part.split('\n');
+                            for (const line of lines) {
+                                if (line.startsWith('data: ')) {
+                                    try {
+                                        const data = JSON.parse(line.substring(6));
 
-                                    if (data.chunk && !data.done) {
-                                        // Append chunk to response
-                                        fullResponse += data.chunk;
-                                        responseDiv.textContent = fullResponse;
-                                        chatMessages.scrollTop = chatMessages.scrollHeight;
-                                    }
-
-                                    if (data.done) {
-                                        // Update conversation history
-                                        if (data.conversationHistory) {
-                                            conversationHistory = data.conversationHistory;
-                                        } else {
-                                            // Fallback: update manually
-                                            conversationHistory.push(
-                                                { role: 'user', content: message },
-                                                { role: 'assistant', content: data.fullResponse || fullResponse }
-                                            );
+                                        if (data.error) {
+                                            throw new Error(data.message || 'Stream error');
                                         }
+
+                                        if (data.chunk && !data.done) {
+                                            // Remove typing indicator on first chunk
+                                            if (isFirstChunk) {
+                                                responseDiv.classList.remove('typing');
+                                                responseDiv.innerHTML = '';
+                                                isFirstChunk = false;
+                                            }
+
+                                            // Append chunk to response
+                                            fullResponse += data.chunk;
+                                            responseDiv.textContent = fullResponse;
+                                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                                        }
+
+                                        if (data.done) {
+                                            // Update conversation history
+                                            if (data.conversationHistory) {
+                                                conversationHistory = data.conversationHistory;
+                                            } else {
+                                                // Fallback: update manually
+                                                conversationHistory.push(
+                                                    { role: 'user', content: message },
+                                                    { role: 'assistant', content: data.fullResponse || fullResponse }
+                                                );
+                                            }
+                                        }
+                                    } catch (e) {
+                                        console.warn('Failed to parse SSE data:', line, e);
                                     }
-                                } catch (e) {
-                                    console.warn('Failed to parse SSE data:', line, e);
                                 }
                             }
                         }

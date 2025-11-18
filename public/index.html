@@ -1632,113 +1632,109 @@
                 chatWindow.classList.remove('open');
             });
 
-            // Send message with STREAMING support (Anthropic SDK)
+            // Send message with STREAMING support (v2.0 - Simplified & Verified)
             async function sendMessage() {
                 const message = chatInput.value.trim();
                 if (!message || isProcessing) return;
 
-                // Add user message to UI
+                console.log('[STREAM] Starting new message:', message);
+
+                // Add user message
                 addMessage(message, 'user');
                 chatInput.value = '';
                 isProcessing = true;
                 chatSend.disabled = true;
 
-                // Create placeholder for streaming response with typing indicator
+                // Create response placeholder
                 const responseDiv = document.createElement('div');
                 responseDiv.className = 'chat-message assistant typing';
                 responseDiv.innerHTML = '<span class="typing-indicator"><span></span><span></span><span></span></span>';
                 chatMessages.appendChild(responseDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
 
-                let fullResponse = '';
-                let buffer = ''; // Buffer for incomplete SSE messages
-                let isFirstChunk = true;
+                let fullText = '';
+                let buffer = '';
+                let firstChunk = true;
 
                 try {
-                    const response = await fetch('/api/agent/chat-stream', {
+                    console.log('[STREAM] Fetching /api/agent/chat-stream...');
+
+                    const res = await fetch('/api/agent/chat-stream', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             message: message,
                             conversationHistory: conversationHistory
                         })
                     });
 
-                    if (!response.ok) {
-                        throw new Error('Failed to get response');
-                    }
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-                    // Read the stream using ReadableStream
-                    const reader = response.body.getReader();
+                    console.log('[STREAM] Reading stream...');
+                    const reader = res.body.getReader();
                     const decoder = new TextDecoder();
 
                     while (true) {
                         const { done, value } = await reader.read();
-                        if (done) break;
+                        if (done) {
+                            console.log('[STREAM] Stream complete');
+                            break;
+                        }
 
-                        // Decode chunk with streaming enabled
-                        const chunk = decoder.decode(value, { stream: true });
-                        buffer += chunk;
+                        const text = decoder.decode(value, { stream: true });
+                        buffer += text;
 
-                        // Process complete SSE messages (ending with \n\n)
-                        const parts = buffer.split('\n\n');
-                        buffer = parts.pop() || ''; // Keep incomplete part in buffer
+                        // Process complete SSE messages
+                        const messages = buffer.split('\n\n');
+                        buffer = messages.pop() || '';
 
-                        for (const part of parts) {
-                            const lines = part.split('\n');
-                            for (const line of lines) {
-                                if (line.startsWith('data: ')) {
-                                    try {
-                                        const data = JSON.parse(line.substring(6));
+                        for (const msg of messages) {
+                            if (msg.startsWith('data: ')) {
+                                try {
+                                    const data = JSON.parse(msg.substring(6));
 
-                                        if (data.error) {
-                                            throw new Error(data.message || 'Stream error');
+                                    if (data.chunk && !data.done) {
+                                        // IMMEDIATELY update UI
+                                        if (firstChunk) {
+                                            responseDiv.classList.remove('typing');
+                                            responseDiv.textContent = '';
+                                            firstChunk = false;
+                                            console.log('[STREAM] First chunk received!');
                                         }
 
-                                        if (data.chunk && !data.done) {
-                                            // Remove typing indicator on first chunk
-                                            if (isFirstChunk) {
-                                                responseDiv.classList.remove('typing');
-                                                responseDiv.innerHTML = '';
-                                                isFirstChunk = false;
-                                            }
+                                        fullText += data.chunk;
+                                        responseDiv.textContent = fullText;
 
-                                            // Append chunk to response with streaming effect
-                                            fullResponse += data.chunk;
-                                            responseDiv.textContent = fullResponse;
-                                            chatMessages.scrollTop = chatMessages.scrollHeight;
-                                        }
+                                        // Force scroll
+                                        chatMessages.scrollTop = chatMessages.scrollHeight;
 
-                                        if (data.done) {
-                                            // Update conversation history
-                                            if (data.conversationHistory) {
-                                                conversationHistory = data.conversationHistory;
-                                            } else {
-                                                conversationHistory.push(
-                                                    { role: 'user', content: message },
-                                                    { role: 'assistant', content: data.fullResponse || fullResponse }
-                                                );
-                                            }
-                                        }
-                                    } catch (e) {
-                                        console.warn('Failed to parse SSE data:', line, e);
+                                        console.log('[STREAM] Chunk:', data.chunk);
                                     }
+
+                                    if (data.done) {
+                                        console.log('[STREAM] Done signal received');
+                                        if (data.conversationHistory) {
+                                            conversationHistory = data.conversationHistory;
+                                        } else {
+                                            conversationHistory.push(
+                                                { role: 'user', content: message },
+                                                { role: 'assistant', content: fullText }
+                                            );
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.warn('[STREAM] Parse error:', e);
                                 }
                             }
                         }
                     }
 
-                    // Ensure we have content
-                    if (!fullResponse) {
-                        throw new Error('No response received');
-                    }
+                    if (!fullText) throw new Error('No response received');
 
                 } catch (error) {
-                    console.error('Chat streaming error:', error);
+                    console.error('[STREAM] Error:', error);
                     responseDiv.remove();
-                    addMessage('I apologize, but I\'m having trouble responding right now. Please try again.', 'assistant');
+                    addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
                 } finally {
                     isProcessing = false;
                     chatSend.disabled = false;
@@ -1766,6 +1762,8 @@
             });
 
             console.log('✅ Gallery Assistant Chatbot initialized');
+            console.log('📌 Version: 2.0 (Streaming Fixed - Nov 18 2025)');
+            console.log('🔧 Using: /api/agent/chat-stream with Anthropic Claude 3.5 Haiku');
         })();
     </script>
 </body>

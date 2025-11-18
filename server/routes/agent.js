@@ -1,6 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const { Agent, run } = require('@openai/agents');
+const OpenAI = require('openai');
+
+// Initialize OpenAI client for streaming
+let openaiClient = null;
+
+function getOpenAIClient() {
+  if (!openaiClient && process.env.OPENAI_API_KEY) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+  }
+  return openaiClient;
+}
 
 // Lazy initialization of agent
 let galleryAgent = null;
@@ -107,33 +120,57 @@ router.post('/chat-stream', async (req, res) => {
       'X-Accel-Buffering': 'no' // Disable nginx buffering
     });
 
-    // Initialize agent
-    const agent = initializeAgent();
-
-    // Build conversation context
-    let contextMessage = message;
-    if (conversationHistory.length > 0) {
-      const conversationContext = conversationHistory
-        .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
-        .join('\n');
-      contextMessage = `Previous conversation:\n${conversationContext}\n\nUser: ${message}`;
+    // Get OpenAI client
+    const client = getOpenAIClient();
+    if (!client) {
+      throw new Error('OpenAI client not initialized');
     }
+
+    // Build messages array for OpenAI
+    const systemMessage = {
+      role: 'system',
+      content: `You are a helpful and knowledgeable AI curator and assistant for Daamitha's art gallery.
+
+About the Artist:
+- Daamitha is a contemporary oil painter based in London
+- She's a medical student who maintains her artistic practice
+- Born in India (Bangalore), her work bridges Eastern heritage and Western technique
+- She's also a traditional Indian singer, keeping South Indian musical traditions alive
+- Her paintings reflect multicultural experiences and cultural fusion
+
+Your Role:
+- Help customers learn about the gallery, paintings, and the artist
+- Answer questions about artwork availability, pricing, and commissions
+- Guide customers through the Lead-to-Order and Order-to-Cash processes
+- Provide information about the artist's background, techniques, and inspiration
+
+Website: https://www.daamitha.gallery/
+
+Be warm, knowledgeable, and enthusiastic about art. Speak with passion about the cultural heritage and stories behind each piece.`
+    };
+
+    const messages = [systemMessage, ...conversationHistory, { role: 'user', content: message }];
 
     let fullResponse = '';
 
-    // Run agent with streaming callback
-    const result = await run(agent, contextMessage, {
-      onChunk: (chunk) => {
-        // Stream each chunk to client
-        fullResponse += chunk;
-        res.write(`data: ${JSON.stringify({ chunk, done: false })}\n\n`);
-      }
+    // Create streaming chat completion
+    const stream = await client.chat.completions.create({
+      model: 'gpt-4o',  // Using GPT-4o (gpt-5 doesn't exist yet)
+      messages: messages,
+      stream: true,
+      temperature: 0.7,
+      max_tokens: 1000
     });
 
-    // If onChunk wasn't supported, send the full response
-    if (!fullResponse && result.finalOutput) {
-      fullResponse = result.finalOutput;
-      res.write(`data: ${JSON.stringify({ chunk: fullResponse, done: false })}\n\n`);
+    // Process the stream
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content || '';
+
+      if (content) {
+        fullResponse += content;
+        // Send chunk to client
+        res.write(`data: ${JSON.stringify({ chunk: content, done: false })}\n\n`);
+      }
     }
 
     // Send completion signal

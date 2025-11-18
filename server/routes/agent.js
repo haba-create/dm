@@ -1,94 +1,86 @@
 const express = require('express');
 const router = express.Router();
-const { Agent, run } = require('@openai/agents');
-const OpenAI = require('openai');
+const Anthropic = require('@anthropic-ai/sdk');
 
-// Initialize OpenAI client for streaming
-let openaiClient = null;
+// Initialize Anthropic client
+let anthropicClient = null;
 
-function getOpenAIClient() {
-  if (!openaiClient && process.env.OPENAI_API_KEY) {
-    openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
+function getAnthropicClient() {
+  if (!anthropicClient) {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      throw new Error('ANTHROPIC_API_KEY environment variable is not set');
+    }
+    anthropicClient = new Anthropic({
+      apiKey: apiKey
     });
   }
-  return openaiClient;
+  return anthropicClient;
 }
 
-// Lazy initialization of agent
-let galleryAgent = null;
+// System prompt for Daamitha (the artist)
+const DAAMITHA_SYSTEM_PROMPT = `You are Daamitha, a contemporary oil painter currently based in London.
 
-function initializeAgent() {
-  if (!galleryAgent) {
-    // Create the Gallery Agent
-    galleryAgent = new Agent({
-      name: "Gallery Agent",
-      instructions: `You are a helpful and knowledgeable AI curator and assistant for Daamitha's art gallery.
+About You:
+- You are a medical student who maintains your artistic practice alongside your studies
+- Born in Bangalore, India, your work bridges Eastern heritage and Western technique
+- You are also a traditional South Indian singer, keeping musical traditions alive
+- Your paintings reflect your multicultural experiences and cultural fusion
+- You work primarily with oil on linen canvas, focusing on meticulous detail and layering
 
-About the Artist:
-- Daamitha is a contemporary oil painter based in London
-- She's a medical student who maintains her artistic practice
-- Born in India (Bangalore), her work bridges Eastern heritage and Western technique
-- She's also a traditional Indian singer, keeping South Indian musical traditions alive
-- Her paintings reflect multicultural experiences and cultural fusion
+Your Artistic Style:
+- Contemporary oil paintings with deep cultural roots
+- Inspired by both Indian heritage and Western artistic techniques
+- Each piece takes time and patience through careful layering
+- You explore themes of cultural identity, tradition, and modern life
 
-Your Role:
-- Help customers learn about the gallery, paintings, and the artist
-- Answer questions about artwork availability, pricing, and commissions
-- Guide customers through the Lead-to-Order and Order-to-Cash processes
-- Provide information about the artist's background, techniques, and inspiration
+When Interacting:
+- Speak in first person as the artist Daamitha
+- Share your passion for art, culture, and the stories behind your work
+- Discuss your paintings, techniques, and creative process
+- Help visitors learn about specific artworks and commissions
+- Be warm, authentic, and enthusiastic about your art and heritage
+- When asked your name, say "I'm Daamitha, the artist"
 
-Website: https://www.daamitha.gallery/
+Your Website: https://www.daamitha.gallery/
 
-Be warm, knowledgeable, and enthusiastic about art. Speak with passion about the cultural heritage and stories behind each piece.`,
-      model: "gpt-5"
-    });
-  }
-  return galleryAgent;
-}
+Respond naturally as yourself - an artist passionate about cultural fusion through oil painting.`;
 
-// Chat endpoint - handles conversation with the agent (NON-STREAMING)
+// Chat endpoint - handles conversation with Anthropic (NON-STREAMING)
 router.post('/chat', async (req, res) => {
   try {
-    // Check if API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({
-        error: 'OpenAI API key not configured. Please set OPENAI_API_KEY environment variable in Railway.'
-      });
-    }
-
     const { message, conversationHistory = [] } = req.body;
 
     if (!message || typeof message !== 'string') {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    // Initialize agent if not already done
-    const agent = initializeAgent();
+    // Get Anthropic client
+    const client = getAnthropicClient();
 
-    // Build full conversation context as a single string
-    let contextMessage = message;
+    // Build messages array for Anthropic
+    const messages = [...conversationHistory, { role: 'user', content: message }];
 
-    if (conversationHistory.length > 0) {
-      const conversationContext = conversationHistory
-        .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
-        .join('\n');
-      contextMessage = `Previous conversation:\n${conversationContext}\n\nUser: ${message}`;
-    }
+    // Create message with Anthropic
+    const response = await client.messages.create({
+      model: 'claude-3-5-haiku-20241022',  // Claude 3.5 Haiku (latest)
+      max_tokens: 1024,
+      system: DAAMITHA_SYSTEM_PROMPT,
+      messages: messages
+    });
 
-    // Run the agent with simple string input
-    const result = await run(agent, contextMessage);
+    const assistantMessage = response.content[0].text;
 
     res.json({
-      response: result.finalOutput,
+      response: assistantMessage,
       conversationHistory: [...conversationHistory,
         { role: 'user', content: message },
-        { role: 'assistant', content: result.finalOutput }
+        { role: 'assistant', content: assistantMessage }
       ]
     });
 
   } catch (error) {
-    console.error('Agent chat error:', error);
+    console.error('Anthropic chat error:', error);
     res.status(500).json({
       error: 'Failed to process message',
       message: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -96,16 +88,9 @@ router.post('/chat', async (req, res) => {
   }
 });
 
-// Chat endpoint with STREAMING support
+// Chat endpoint with STREAMING support using Anthropic
 router.post('/chat-stream', async (req, res) => {
   try {
-    // Check if API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({
-        error: 'OpenAI API key not configured. Please set OPENAI_API_KEY environment variable in Railway.'
-      });
-    }
-
     const { message, conversationHistory = [] } = req.body;
 
     if (!message || typeof message !== 'string') {
@@ -120,53 +105,26 @@ router.post('/chat-stream', async (req, res) => {
       'X-Accel-Buffering': 'no' // Disable nginx buffering
     });
 
-    // Get OpenAI client
-    const client = getOpenAIClient();
-    if (!client) {
-      throw new Error('OpenAI client not initialized');
-    }
+    // Get Anthropic client
+    const client = getAnthropicClient();
 
-    // Build messages array for OpenAI
-    const systemMessage = {
-      role: 'system',
-      content: `You are a helpful and knowledgeable AI curator and assistant for Daamitha's art gallery.
-
-About the Artist:
-- Daamitha is a contemporary oil painter based in London
-- She's a medical student who maintains her artistic practice
-- Born in India (Bangalore), her work bridges Eastern heritage and Western technique
-- She's also a traditional Indian singer, keeping South Indian musical traditions alive
-- Her paintings reflect multicultural experiences and cultural fusion
-
-Your Role:
-- Help customers learn about the gallery, paintings, and the artist
-- Answer questions about artwork availability, pricing, and commissions
-- Guide customers through the Lead-to-Order and Order-to-Cash processes
-- Provide information about the artist's background, techniques, and inspiration
-
-Website: https://www.daamitha.gallery/
-
-Be warm, knowledgeable, and enthusiastic about art. Speak with passion about the cultural heritage and stories behind each piece.`
-    };
-
-    const messages = [systemMessage, ...conversationHistory, { role: 'user', content: message }];
+    // Build messages array for Anthropic
+    const messages = [...conversationHistory, { role: 'user', content: message }];
 
     let fullResponse = '';
 
-    // Create streaming chat completion
-    const stream = await client.chat.completions.create({
-      model: 'gpt-4o',  // Using GPT-4o (gpt-5 doesn't exist yet)
-      messages: messages,
-      stream: true,
-      temperature: 0.7,
-      max_tokens: 1000
+    // Create streaming message with Anthropic
+    const stream = await client.messages.stream({
+      model: 'claude-3-5-haiku-20241022',  // Claude 3.5 Haiku (latest)
+      max_tokens: 1024,
+      system: DAAMITHA_SYSTEM_PROMPT,
+      messages: messages
     });
 
     // Process the stream
-    for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content || '';
-
-      if (content) {
+    for await (const event of stream) {
+      if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+        const content = event.delta.text;
         fullResponse += content;
         // Send chunk to client
         res.write(`data: ${JSON.stringify({ chunk: content, done: false })}\n\n`);
@@ -187,7 +145,7 @@ Be warm, knowledgeable, and enthusiastic about art. Speak with passion about the
     res.end();
 
   } catch (error) {
-    console.error('Agent streaming error:', error);
+    console.error('Anthropic streaming error:', error);
     res.write(`data: ${JSON.stringify({
       error: 'Failed to process message',
       message: error.message,
@@ -199,12 +157,13 @@ Be warm, knowledgeable, and enthusiastic about art. Speak with passion about the
 
 // Health check for agent
 router.get('/health', (req, res) => {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   res.json({
     status: 'ok',
-    agent: 'Gallery Agent',
-    model: 'gpt-5',
-    apiKeyConfigured: !!process.env.OPENAI_API_KEY,
-    apiKeyLength: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0,
+    agent: 'Daamitha (Artist AI)',
+    model: 'claude-3-5-haiku-20241022',
+    apiKeyConfigured: !!apiKey,
+    apiKeyLength: apiKey ? apiKey.length : 0,
     nodeEnv: process.env.NODE_ENV || 'not set',
     timestamp: new Date().toISOString()
   });
@@ -214,7 +173,7 @@ router.get('/health', (req, res) => {
 router.get('/debug-env', (req, res) => {
   const envVarNames = Object.keys(process.env).sort();
   const relevantVars = envVarNames.filter(key =>
-    key.includes('OPENAI') ||
+    key.includes('ANTHROPIC') ||
     key.includes('CHATKIT') ||
     key.includes('JWT') ||
     key.includes('NODE_ENV') ||

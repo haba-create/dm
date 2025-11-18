@@ -24,6 +24,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.69.0",
     "@openai/agents": "^0.1.9",
     "@openai/chatkit": "^1.0.0",
     "@openai/guardrails": "^0.1.0",

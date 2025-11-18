@@ -1210,14 +1210,28 @@
             position: fixed;
             bottom: 100px;
             right: 20px;
-            width: 380px;
-            height: 550px;
+            width: 420px;
+            height: 600px;
             background: var(--warm-ivory);
-            border-radius: 25px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            border: 3px solid var(--marigold);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            border: none;
             flex-direction: column;
             overflow: hidden;
+            backdrop-filter: blur(10px);
+            transform-origin: bottom right;
+            animation: chatOpen 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes chatOpen {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
         #chat-window.open {
@@ -1278,16 +1292,25 @@
         }
 
         .chat-message {
-            padding: 12px 18px;
-            border-radius: 18px;
-            max-width: 80%;
+            padding: 14px 20px;
+            border-radius: 16px;
+            max-width: 85%;
             word-wrap: break-word;
-            animation: slideIn 0.3s ease;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
         }
 
         @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(15px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         .chat-message.user {
@@ -1358,42 +1381,51 @@
 
         #chat-input {
             flex: 1;
-            padding: 12px 20px;
-            border: 2px solid var(--sage);
-            border-radius: 25px;
+            padding: 14px 20px;
+            border: 2px solid rgba(42, 157, 143, 0.2);
+            border-radius: 24px;
             font-family: 'Lora', serif;
-            font-size: 14px;
+            font-size: 15px;
             outline: none;
+            background: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         #chat-input:focus {
             border-color: var(--deep-saffron);
-            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+            box-shadow: 0 4px 16px rgba(255, 107, 53, 0.15);
+            transform: translateY(-1px);
         }
 
         #chat-send {
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--deep-saffron), var(--marigold));
+            background: linear-gradient(135deg, var(--deep-saffron) 0%, var(--marigold) 100%);
             border: none;
             color: white;
-            font-size: 18px;
+            font-size: 20px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         #chat-send:hover:not(:disabled) {
-            transform: scale(1.1);
-            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.5);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 24px rgba(255, 107, 53, 0.5);
+        }
+
+        #chat-send:active:not(:disabled) {
+            transform: translateY(-1px) scale(0.98);
         }
 
         #chat-send:disabled {
-            opacity: 0.5;
+            opacity: 0.6;
             cursor: not-allowed;
+            transform: none;
         }
 
         @media (max-width: 768px) {
@@ -1600,7 +1632,7 @@
                 chatWindow.classList.remove('open');
             });
 
-            // Send message (simple non-streaming approach - works out of the box)
+            // Send message with STREAMING support (Anthropic SDK)
             async function sendMessage() {
                 const message = chatInput.value.trim();
                 if (!message || isProcessing) return;
@@ -1611,15 +1643,19 @@
                 isProcessing = true;
                 chatSend.disabled = true;
 
-                // Show typing indicator
-                const typingDiv = document.createElement('div');
-                typingDiv.className = 'chat-message assistant typing';
-                typingDiv.innerHTML = '<span class="typing-indicator"><span></span><span></span><span></span></span>';
-                chatMessages.appendChild(typingDiv);
+                // Create placeholder for streaming response with typing indicator
+                const responseDiv = document.createElement('div');
+                responseDiv.className = 'chat-message assistant typing';
+                responseDiv.innerHTML = '<span class="typing-indicator"><span></span><span></span><span></span></span>';
+                chatMessages.appendChild(responseDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
 
+                let fullResponse = '';
+                let buffer = ''; // Buffer for incomplete SSE messages
+                let isFirstChunk = true;
+
                 try {
-                    const response = await fetch('/api/agent/chat', {
+                    const response = await fetch('/api/agent/chat-stream', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -1634,31 +1670,74 @@
                         throw new Error('Failed to get response');
                     }
 
-                    const data = await response.json();
+                    // Read the stream using ReadableStream
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
 
-                    // Remove typing indicator
-                    typingDiv.remove();
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
 
-                    // Add assistant message
-                    if (data.message) {
-                        addMessage(data.message, 'assistant');
+                        // Decode chunk with streaming enabled
+                        const chunk = decoder.decode(value, { stream: true });
+                        buffer += chunk;
 
-                        // Update conversation history
-                        if (data.conversationHistory) {
-                            conversationHistory = data.conversationHistory;
-                        } else {
-                            conversationHistory.push(
-                                { role: 'user', content: message },
-                                { role: 'assistant', content: data.message }
-                            );
+                        // Process complete SSE messages (ending with \n\n)
+                        const parts = buffer.split('\n\n');
+                        buffer = parts.pop() || ''; // Keep incomplete part in buffer
+
+                        for (const part of parts) {
+                            const lines = part.split('\n');
+                            for (const line of lines) {
+                                if (line.startsWith('data: ')) {
+                                    try {
+                                        const data = JSON.parse(line.substring(6));
+
+                                        if (data.error) {
+                                            throw new Error(data.message || 'Stream error');
+                                        }
+
+                                        if (data.chunk && !data.done) {
+                                            // Remove typing indicator on first chunk
+                                            if (isFirstChunk) {
+                                                responseDiv.classList.remove('typing');
+                                                responseDiv.innerHTML = '';
+                                                isFirstChunk = false;
+                                            }
+
+                                            // Append chunk to response with streaming effect
+                                            fullResponse += data.chunk;
+                                            responseDiv.textContent = fullResponse;
+                                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                                        }
+
+                                        if (data.done) {
+                                            // Update conversation history
+                                            if (data.conversationHistory) {
+                                                conversationHistory = data.conversationHistory;
+                                            } else {
+                                                conversationHistory.push(
+                                                    { role: 'user', content: message },
+                                                    { role: 'assistant', content: data.fullResponse || fullResponse }
+                                                );
+                                            }
+                                        }
+                                    } catch (e) {
+                                        console.warn('Failed to parse SSE data:', line, e);
+                                    }
+                                }
+                            }
                         }
-                    } else {
+                    }
+
+                    // Ensure we have content
+                    if (!fullResponse) {
                         throw new Error('No response received');
                     }
 
                 } catch (error) {
-                    console.error('Chat error:', error);
-                    typingDiv.remove();
+                    console.error('Chat streaming error:', error);
+                    responseDiv.remove();
                     addMessage('I apologize, but I\'m having trouble responding right now. Please try again.', 'assistant');
                 } finally {
                     isProcessing = false;

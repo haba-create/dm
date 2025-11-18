@@ -96,7 +96,7 @@ app.listen(PORT, () => {
     console.log(`NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
     console.log(`PORT: ${process.env.PORT || 'not set'}`);
     console.log(`JWT_SECRET: ${process.env.JWT_SECRET ? 'SET (length: ' + process.env.JWT_SECRET.length + ')' : 'NOT SET'}`);
-    console.log(`OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? 'SET (length: ' + process.env.OPENAI_API_KEY.length + ')' : 'NOT SET'}`);
+    console.log(`ANTHROPIC_API_KEY: ${process.env.ANTHROPIC_API_KEY ? 'SET (length: ' + process.env.ANTHROPIC_API_KEY.length + ')' : 'NOT SET'}`);
     console.log(`CHATKIT_WORKFLOW_ID: ${process.env.CHATKIT_WORKFLOW_ID || 'NOT SET'}`);
     console.log('');
 
@@ -105,8 +105,8 @@ app.listen(PORT, () => {
         console.warn('⚠️  WARNING: Using default JWT secret. Set JWT_SECRET environment variable in production!');
     }
 
-    // Warn if OpenAI API key is missing
-    if (!process.env.OPENAI_API_KEY) {
-        console.error('❌ ERROR: OPENAI_API_KEY is not set! Chat functionality will not work.');
+    // Warn if Anthropic API key is missing
+    if (!process.env.ANTHROPIC_API_KEY) {
+        console.error('❌ ERROR: ANTHROPIC_API_KEY is not set! Chat functionality will not work.');
     }
 });

@@ -1600,7 +1600,7 @@
                 chatWindow.classList.remove('open');
             });
 
-            // Send message with STREAMING support
+            // Send message (simple non-streaming approach - works out of the box)
             async function sendMessage() {
                 const message = chatInput.value.trim();
                 if (!message || isProcessing) return;
@@ -1611,18 +1611,15 @@
                 isProcessing = true;
                 chatSend.disabled = true;
 
-                // Create placeholder for streaming response with typing indicator
-                const responseDiv = document.createElement('div');
-                responseDiv.className = 'chat-message assistant typing';
-                responseDiv.innerHTML = '<span class="typing-indicator"><span></span><span></span><span></span></span>';
-                chatMessages.appendChild(responseDiv);
+                // Show typing indicator
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'chat-message assistant typing';
+                typingDiv.innerHTML = '<span class="typing-indicator"><span></span><span></span><span></span></span>';
+                chatMessages.appendChild(typingDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
 
-                let fullResponse = '';
-                let buffer = ''; // Buffer for incomplete SSE messages
-
                 try {
-                    const response = await fetch('/api/agent/chat-stream', {
+                    const response = await fetch('/api/agent/chat', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -1637,79 +1634,32 @@
                         throw new Error('Failed to get response');
                     }
 
-                    // Read the stream
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    let isFirstChunk = true;
+                    const data = await response.json();
 
-                    while (true) {
-                        const { done, value } = await reader.read();
+                    // Remove typing indicator
+                    typingDiv.remove();
 
-                        if (done) break;
+                    // Add assistant message
+                    if (data.message) {
+                        addMessage(data.message, 'assistant');
 
-                        // Decode the chunk with streaming enabled
-                        const chunk = decoder.decode(value, { stream: true });
-                        buffer += chunk;
-
-                        // Process complete SSE messages (ending with \n\n)
-                        const parts = buffer.split('\n\n');
-                        // Keep the last part in the buffer if it's incomplete
-                        buffer = parts.pop() || '';
-
-                        for (const part of parts) {
-                            const lines = part.split('\n');
-                            for (const line of lines) {
-                                if (line.startsWith('data: ')) {
-                                    try {
-                                        const data = JSON.parse(line.substring(6));
-
-                                        if (data.error) {
-                                            throw new Error(data.message || 'Stream error');
-                                        }
-
-                                        if (data.chunk && !data.done) {
-                                            // Remove typing indicator on first chunk
-                                            if (isFirstChunk) {
-                                                responseDiv.classList.remove('typing');
-                                                responseDiv.innerHTML = '';
-                                                isFirstChunk = false;
-                                            }
-
-                                            // Append chunk to response
-                                            fullResponse += data.chunk;
-                                            responseDiv.textContent = fullResponse;
-                                            chatMessages.scrollTop = chatMessages.scrollHeight;
-                                        }
-
-                                        if (data.done) {
-                                            // Update conversation history
-                                            if (data.conversationHistory) {
-                                                conversationHistory = data.conversationHistory;
-                                            } else {
-                                                // Fallback: update manually
-                                                conversationHistory.push(
-                                                    { role: 'user', content: message },
-                                                    { role: 'assistant', content: data.fullResponse || fullResponse }
-                                                );
-                                            }
-                                        }
-                                    } catch (e) {
-                                        console.warn('Failed to parse SSE data:', line, e);
-                                    }
-                                }
-                            }
+                        // Update conversation history
+                        if (data.conversationHistory) {
+                            conversationHistory = data.conversationHistory;
+                        } else {
+                            conversationHistory.push(
+                                { role: 'user', content: message },
+                                { role: 'assistant', content: data.message }
+                            );
                         }
-                    }
-
-                    // Ensure we have content
-                    if (!fullResponse) {
+                    } else {
                         throw new Error('No response received');
                     }
 
                 } catch (error) {
-                    console.error('Chat streaming error:', error);
-                    responseDiv.remove();
-                    addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+                    console.error('Chat error:', error);
+                    typingDiv.remove();
+                    addMessage('I apologize, but I\'m having trouble responding right now. Please try again.', 'assistant');
                 } finally {
                     isProcessing = false;
                     chatSend.disabled = false;

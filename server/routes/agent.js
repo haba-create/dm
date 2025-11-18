@@ -34,7 +34,7 @@ Be warm, knowledgeable, and enthusiastic about art. Speak with passion about the
   return galleryAgent;
 }
 
-// Chat endpoint - handles conversation with the agent
+// Chat endpoint - handles conversation with the agent (NON-STREAMING)
 router.post('/chat', async (req, res) => {
   try {
     // Check if API key is configured
@@ -80,6 +80,83 @@ router.post('/chat', async (req, res) => {
       error: 'Failed to process message',
       message: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
+  }
+});
+
+// Chat endpoint with STREAMING support
+router.post('/chat-stream', async (req, res) => {
+  try {
+    // Check if API key is configured
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({
+        error: 'OpenAI API key not configured. Please set OPENAI_API_KEY environment variable in Railway.'
+      });
+    }
+
+    const { message, conversationHistory = [] } = req.body;
+
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    // Set headers for Server-Sent Events
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no' // Disable nginx buffering
+    });
+
+    // Initialize agent
+    const agent = initializeAgent();
+
+    // Build conversation context
+    let contextMessage = message;
+    if (conversationHistory.length > 0) {
+      const conversationContext = conversationHistory
+        .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+        .join('\n');
+      contextMessage = `Previous conversation:\n${conversationContext}\n\nUser: ${message}`;
+    }
+
+    let fullResponse = '';
+
+    // Run agent with streaming callback
+    const result = await run(agent, contextMessage, {
+      onChunk: (chunk) => {
+        // Stream each chunk to client
+        fullResponse += chunk;
+        res.write(`data: ${JSON.stringify({ chunk, done: false })}\n\n`);
+      }
+    });
+
+    // If onChunk wasn't supported, send the full response
+    if (!fullResponse && result.finalOutput) {
+      fullResponse = result.finalOutput;
+      res.write(`data: ${JSON.stringify({ chunk: fullResponse, done: false })}\n\n`);
+    }
+
+    // Send completion signal
+    res.write(`data: ${JSON.stringify({
+      chunk: '',
+      done: true,
+      fullResponse,
+      conversationHistory: [...conversationHistory,
+        { role: 'user', content: message },
+        { role: 'assistant', content: fullResponse }
+      ]
+    })}\n\n`);
+
+    res.end();
+
+  } catch (error) {
+    console.error('Agent streaming error:', error);
+    res.write(`data: ${JSON.stringify({
+      error: 'Failed to process message',
+      message: error.message,
+      done: true
+    })}\n\n`);
+    res.end();
   }
 });
 

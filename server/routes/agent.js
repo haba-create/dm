@@ -113,23 +113,31 @@ router.post('/chat-stream', async (req, res) => {
 
     let fullResponse = '';
 
-    // Create streaming message with Anthropic
-    const stream = await client.messages.stream({
+    // Create streaming message with Anthropic using the correct SDK method
+    const stream = client.messages.stream({
       model: 'claude-3-5-haiku-20241022',  // Claude 3.5 Haiku (latest)
       max_tokens: 1024,
       system: DAAMITHA_SYSTEM_PROMPT,
       messages: messages
+    })
+    .on('text', (text) => {
+      // This event fires for each text chunk
+      fullResponse += text;
+      // Send chunk to client immediately
+      res.write(`data: ${JSON.stringify({ chunk: text, done: false })}\n\n`);
+    })
+    .on('error', (error) => {
+      console.error('Stream error:', error);
+      res.write(`data: ${JSON.stringify({
+        error: 'Streaming error occurred',
+        message: error.message,
+        done: true
+      })}\n\n`);
+      res.end();
     });
 
-    // Process the stream
-    for await (const event of stream) {
-      if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-        const content = event.delta.text;
-        fullResponse += content;
-        // Send chunk to client
-        res.write(`data: ${JSON.stringify({ chunk: content, done: false })}\n\n`);
-      }
-    }
+    // Wait for streaming to complete
+    await stream.finalMessage();
 
     // Send completion signal
     res.write(`data: ${JSON.stringify({

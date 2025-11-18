@@ -72,7 +72,7 @@ router.post('/chat', async (req, res) => {
     const assistantMessage = response.content[0].text;
 
     res.json({
-      response: assistantMessage,
+      message: assistantMessage,
       conversationHistory: [...conversationHistory,
         { role: 'user', content: message },
         { role: 'assistant', content: assistantMessage }

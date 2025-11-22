@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Portal - Daamitha Gallery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --warm-ivory: #FDF8F3;
+            --deep-saffron: #FF6B35;
+            --turmeric: #F7C548;
+            --terracotta: #E07A5F;
+            --burgundy: #800020;
+            --deep-teal: #1A535C;
+            --charcoal: #2D3436;
+            --marigold: #FFB347;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lora', serif;
+            background: linear-gradient(135deg, var(--warm-ivory) 0%, #f5e6d3 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .auth-container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .auth-header {
+            background: linear-gradient(135deg, var(--deep-teal), var(--burgundy));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .auth-header h1 {
+            font-family: 'Crimson Text', serif;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .auth-tabs {
+            display: flex;
+            border-bottom: 2px solid #eee;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: 'Lora', serif;
+            font-size: 1rem;
+            color: var(--charcoal);
+            transition: all 0.3s ease;
+        }
+
+        .auth-tab.active {
+            color: var(--burgundy);
+            border-bottom: 3px solid var(--burgundy);
+            margin-bottom: -2px;
+            font-weight: 600;
+        }
+
+        .auth-tab:hover:not(.active) {
+            background: var(--warm-ivory);
+        }
+
+        .auth-form {
+            padding: 2rem;
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--charcoal);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: 'Lora', serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--deep-saffron);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Lora', serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--deep-saffron), var(--terracotta));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-google {
+            background: white;
+            border: 2px solid #e0e0e0;
+            color: var(--charcoal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .btn-google:hover {
+            background: var(--warm-ivory);
+            border-color: var(--deep-saffron);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0;
+            color: #999;
+            font-size: 0.875rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e0e0e0;
+        }
+
+        .divider span {
+            padding: 0 1rem;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .message.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+
+        .message.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--charcoal);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--burgundy);
+        }
+
+        /* User dashboard section */
+        .user-dashboard {
+            display: none;
+            padding: 2rem;
+        }
+
+        .user-dashboard.active {
+            display: block;
+        }
+
+        .user-info {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--deep-saffron), var(--marigold));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            margin: 0 auto 1rem;
+        }
+
+        .user-name {
+            font-family: 'Crimson Text', serif;
+            font-size: 1.5rem;
+            color: var(--charcoal);
+            margin-bottom: 0.25rem;
+        }
+
+        .user-email {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .dashboard-menu {
+            list-style: none;
+        }
+
+        .dashboard-menu li {
+            border-bottom: 1px solid #eee;
+        }
+
+        .dashboard-menu a {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            text-decoration: none;
+            color: var(--charcoal);
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-menu a:hover {
+            background: var(--warm-ivory);
+            color: var(--burgundy);
+        }
+
+        .dashboard-menu .icon {
+            font-size: 1.25rem;
+        }
+
+        .btn-logout {
+            background: none;
+            border: 2px solid var(--terracotta);
+            color: var(--terracotta);
+            margin-top: 1.5rem;
+        }
+
+        .btn-logout:hover {
+            background: var(--terracotta);
+            color: white;
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                border-radius: 0;
+            }
+
+            body {
+                padding: 0;
+            }
+
+            .auth-header h1 {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-link">
+        <span>←</span> Back to Gallery
+    </a>
+
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>🎨 Daamitha Gallery</h1>
+            <p>Client Portal</p>
+        </div>
+
+        <!-- Auth Tabs -->
+        <div class="auth-tabs" id="authTabs">
+            <button class="auth-tab active" data-tab="login">Sign In</button>
+            <button class="auth-tab" data-tab="register">Create Account</button>
+        </div>
+
+        <!-- Login Form -->
+        <form class="auth-form active" id="loginForm">
+            <div id="loginMessage"></div>
+
+            <div class="form-group">
+                <label for="loginEmail">Email Address</label>
+                <input type="email" id="loginEmail" name="email" required placeholder="your@email.com">
+            </div>
+
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" name="password" required placeholder="Your password">
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button>
+
+            <div class="divider"><span>or</span></div>
+
+            <button type="button" class="btn btn-google" id="googleLoginBtn" disabled>
+                <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continue with Google
+            </button>
+        </form>
+
+        <!-- Register Form -->
+        <form class="auth-form" id="registerForm">
+            <div id="registerMessage"></div>
+
+            <div class="form-group">
+                <label for="registerName">Full Name</label>
+                <input type="text" id="registerName" name="name" required placeholder="Your full name">
+            </div>
+
+            <div class="form-group">
+                <label for="registerEmail">Email Address</label>
+                <input type="email" id="registerEmail" name="email" required placeholder="your@email.com">
+            </div>
+
+            <div class="form-group">
+                <label for="registerPassword">Password</label>
+                <input type="password" id="registerPassword" name="password" required placeholder="Create a password" minlength="8">
+            </div>
+
+            <div class="form-group">
+                <label for="registerPhone">Phone (Optional)</label>
+                <input type="tel" id="registerPhone" name="phone" placeholder="Your phone number">
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="registerBtn">Create Account</button>
+
+            <div class="divider"><span>or</span></div>
+
+            <button type="button" class="btn btn-google" id="googleRegisterBtn" disabled>
+                <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Sign up with Google
+            </button>
+        </form>
+
+        <!-- User Dashboard (shown when logged in) -->
+        <div class="user-dashboard" id="userDashboard">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">🎨</div>
+                <div class="user-name" id="userName">Welcome</div>
+                <div class="user-email" id="userEmail"></div>
+            </div>
+
+            <ul class="dashboard-menu">
+                <li>
+                    <a href="/my-orders">
+                        <span class="icon">📦</span>
+                        <span>My Orders</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/">
+                        <span class="icon">🖼️</span>
+                        <span>Browse Gallery</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="chatWithDaamitha">
+                        <span class="icon">💬</span>
+                        <span>Chat with Daamitha</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="editProfile">
+                        <span class="icon">⚙️</span>
+                        <span>Edit Profile</span>
+                    </a>
+                </li>
+            </ul>
+
+            <button class="btn btn-logout" id="logoutBtn">Sign Out</button>
+        </div>
+    </div>
+
+    <script>
+        // Better Auth API endpoints
+        const API_BASE = '/api/client-auth';
+
+        // State
+        let currentUser = null;
+
+        // Elements
+        const authTabs = document.getElementById('authTabs');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const userDashboard = document.getElementById('userDashboard');
+        const loginMessage = document.getElementById('loginMessage');
+        const registerMessage = document.getElementById('registerMessage');
+
+        // Check session on page load
+        checkSession();
+
+        // Tab switching
+        authTabs.querySelectorAll('.auth-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+
+                // Update active tab
+                authTabs.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Show corresponding form
+                document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+                document.getElementById(tabName === 'login' ? 'loginForm' : 'registerForm').classList.add('active');
+
+                // Clear messages
+                loginMessage.innerHTML = '';
+                registerMessage.innerHTML = '';
+            });
+        });
+
+        // Login form submission
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.textContent = 'Signing in...';
+            loginMessage.innerHTML = '';
+
+            try {
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+
+                const response = await fetch(`${API_BASE}/sign-in/email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Login failed');
+                }
+
+                showMessage(loginMessage, 'Welcome back!', 'success');
+                setTimeout(() => {
+                    checkSession();
+                }, 1000);
+
+            } catch (error) {
+                showMessage(loginMessage, error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Sign In';
+            }
+        });
+
+        // Register form submission
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('registerBtn');
+            btn.disabled = true;
+            btn.textContent = 'Creating account...';
+            registerMessage.innerHTML = '';
+
+            try {
+                const name = document.getElementById('registerName').value;
+                const email = document.getElementById('registerEmail').value;
+                const password = document.getElementById('registerPassword').value;
+                const phone = document.getElementById('registerPhone').value;
+
+                const response = await fetch(`${API_BASE}/sign-up/email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, phone }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Registration failed');
+                }
+
+                showMessage(registerMessage, 'Account created successfully! Signing you in...', 'success');
+                setTimeout(() => {
+                    checkSession();
+                }, 1500);
+
+            } catch (error) {
+                showMessage(registerMessage, error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await fetch(`${API_BASE}/sign-out`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                currentUser = null;
+                showAuthForms();
+                showMessage(loginMessage, 'You have been signed out.', 'success');
+
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        });
+
+        // Chat with Daamitha - redirect to main page and open chat
+        document.getElementById('chatWithDaamitha').addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = '/?openChat=true';
+        });
+
+        // Check session
+        async function checkSession() {
+            try {
+                const response = await fetch(`${API_BASE}/session`, {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.session && data.user) {
+                        currentUser = data.user;
+                        showDashboard(data.user);
+                        return;
+                    }
+                }
+
+                showAuthForms();
+
+            } catch (error) {
+                console.error('Session check error:', error);
+                showAuthForms();
+            }
+        }
+
+        // Show dashboard
+        function showDashboard(user) {
+            authTabs.style.display = 'none';
+            loginForm.classList.remove('active');
+            registerForm.classList.remove('active');
+            userDashboard.classList.add('active');
+
+            document.getElementById('userName').textContent = user.name || 'Welcome';
+            document.getElementById('userEmail').textContent = user.email;
+
+            // Set avatar initial
+            const initial = (user.name || user.email)[0].toUpperCase();
+            document.getElementById('userAvatar').textContent = initial;
+        }
+
+        // Show auth forms
+        function showAuthForms() {
+            authTabs.style.display = 'flex';
+            userDashboard.classList.remove('active');
+            loginForm.classList.add('active');
+            registerForm.classList.remove('active');
+
+            // Reset active tab
+            authTabs.querySelectorAll('.auth-tab').forEach((t, i) => {
+                t.classList.toggle('active', i === 0);
+            });
+        }
+
+        // Show message helper
+        function showMessage(element, text, type) {
+            element.innerHTML = `<div class="message ${type}">${text}</div>`;
+        }
+
+        // Check if Google OAuth is configured
+        async function checkGoogleOAuth() {
+            // Google OAuth requires configuration - disable buttons if not configured
+            // This would need server-side check, for now keep disabled
+        }
+    </script>
+</body>
+</html>

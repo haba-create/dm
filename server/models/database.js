@@ -1,230 +1,309 @@
+/**
+ * Database Connection and Initialization
+ *
+ * Handles SQLite connection and schema initialization
+ * for both legacy admin system and new Better Auth client system
+ */
+
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
-const bcrypt = require('bcryptjs');
+const { initializeSchema, initializeAdminUser, initializeSiteContent } = require('./schema');
 
 // Create database connection
 const dbPath = path.join(__dirname, '../../gallery.db');
 const db = new sqlite3.Database(dbPath);
 
 // Initialize database tables
-const initializeDatabase = () => {
-    db.serialize(() => {
-        // Users table
-        db.run(`
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
-                role TEXT DEFAULT 'admin',
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
+const initializeDatabase = async () => {
+  try {
+    // Initialize all schema tables
+    await initializeSchema(db);
 
-        // Artworks table
-        db.run(`
-            CREATE TABLE IF NOT EXISTS artworks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
-                artist TEXT DEFAULT 'Daamitha',
-                technique TEXT,
-                dimensions TEXT,
-                year INTEGER,
-                price REAL,
-                image_path TEXT,
-                description TEXT,
-                category TEXT,
-                available INTEGER DEFAULT 1,
-                featured INTEGER DEFAULT 0,
-                display_order INTEGER DEFAULT 0,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
+    // Initialize admin user for legacy system
+    await initializeAdminUser(db);
 
-        // Site content table
-        db.run(`
-            CREATE TABLE IF NOT EXISTS site_content (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                section TEXT UNIQUE NOT NULL,
-                content TEXT,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
+    // Initialize default site content
+    initializeSiteContent(db);
 
-        // Check if admin user exists, if not create default admin
-        const adminEmail = process.env.ADMIN_EMAIL || 'admin@daamitha.art';
-        const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@123';
+    // Insert initial artworks if table is empty
+    initializeArtworks(db);
 
-        db.get("SELECT * FROM users WHERE email = ?", [adminEmail], async (err, row) => {
-            if (!row) {
-                try {
-                    const hashedPassword = await bcrypt.hash(adminPassword, 10);
-                    db.run(
-                        "INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)",
-                        [adminEmail, hashedPassword, 'admin'],
-                        (err) => {
-                            if (err) {
-                                console.error('Error creating admin user:', err);
-                            } else {
-                                console.log('Default admin user created');
-                                console.log('Email:', adminEmail);
-                                // Don't log password in production
-                                if (process.env.NODE_ENV !== 'production') {
-                                    console.log('Password:', adminPassword);
-                                }
-                            }
-                        }
-                    );
-                } catch (hashError) {
-                    console.error('Error hashing password:', hashError);
-                }
-            }
-        });
-
-        // Insert default site content
-        const defaultContent = [
-            {
-                section: 'hero',
-                content: JSON.stringify({
-                    title: 'Daamitha',
-                    subtitle: 'Contemporary Oil Paintings with Soul',
-                    journey: 'Contemporary Oil Painter • London'
-                })
-            },
-            {
-                section: 'about',
-                content: JSON.stringify({
-                    title: "The Artist's Journey",
-                    paragraphs: [
-                        "Born amidst the vibrant colors and rich traditions of India, Daamitha's artistic soul was nurtured by the cultural heartbeat of South Indian traditions. Currently pursuing her medical studies in London while maintaining her artistic practice, she has created a beautiful fusion of Eastern heritage and contemporary expression.",
-                        "Daamitha bridges the analytical precision of her medical studies with the emotional depth of oil painting. Her canvas becomes a meeting place where traditional Indian philosophy meets Western technique, creating works that speak to the universal human experience while celebrating her cultural roots."
-                    ]
-                })
-            },
-            {
-                section: 'process',
-                content: JSON.stringify({
-                    title: 'The Oil Painting Process',
-                    steps: [
-                        {
-                            title: 'Cultural Inspiration',
-                            description: 'Each painting begins with a memory, a song, or a moment of cultural reflection. I sketch while listening to traditional Indian music.'
-                        },
-                        {
-                            title: 'Canvas Meditation',
-                            description: 'Premium Belgian linen is prepared with multiple layers of rabbit skin glue and oil-based primer, creating a luminous foundation.'
-                        },
-                        {
-                            title: 'Color Alchemy',
-                            description: 'Hand-mixed oil pigments create custom colors inspired by Indian spices, desert sunsets, and English gardens.'
-                        },
-                        {
-                            title: 'Layered Storytelling',
-                            description: 'Each layer is applied using traditional glazing techniques, building depth and luminosity over weeks of careful work.'
-                        },
-                        {
-                            title: 'Soul Integration',
-                            description: 'The final details are painted while singing traditional songs, infusing each piece with cultural memory and personal journey.'
-                        }
-                    ]
-                })
-            }
-        ];
-
-        defaultContent.forEach(item => {
-            db.run(
-                "INSERT OR IGNORE INTO site_content (section, content) VALUES (?, ?)",
-                [item.section, item.content]
-            );
-        });
-
-        // Insert existing artworks as initial data
-        const initialArtworks = [
-            {
-                title: 'Spirit Twin',
-                technique: 'Oil on linen canvas',
-                dimensions: '30" × 24"',
-                year: 2024,
-                price: 1800,
-                image_path: '/images/abstract.wolf&woman.jpg',
-                description: 'Inspired by a painting done by Dimitra Milan',
-                category: 'Contemporary',
-                featured: 1
-            },
-            {
-                title: 'Deep within thought',
-                technique: 'Oil on canvas',
-                dimensions: '36" × 28"',
-                year: 2024,
-                price: 2400,
-                image_path: '/images/cat-oils.jpg',
-                description: 'An original artwork, capturing a cat staring off into the distance deep within thought',
-                category: 'Animals',
-                featured: 1
-            },
-            {
-                title: 'Treetop Reverie',
-                technique: 'Oil on canvas',
-                dimensions: '24" × 20"',
-                year: 2023,
-                price: 1400,
-                image_path: '/images/monkey-oils.jpg',
-                description: 'An original piece, depicting the playful nature of 3 chimps within their habitat. A photo was used as a reference to help create this piece',
-                category: 'Animals',
-                featured: 1
-            },
-            {
-                title: 'Feathered Jewel',
-                technique: 'Oil on linen canvas',
-                dimensions: '32" × 26"',
-                year: 2024,
-                price: 2000,
-                image_path: '/images/peacock-feather.jpg',
-                description: 'Capturing the elegance and intricacy of a peacock feather',
-                category: 'Nature',
-                featured: 1
-            },
-            {
-                title: "Mother's Love",
-                technique: 'Oil on canvas',
-                dimensions: '22" × 18"',
-                year: 2024,
-                price: 1600,
-                image_path: '/images/penguins.jpg',
-                description: 'Capturing the raw emotion between a mother and a child',
-                category: 'Animals',
-                featured: 1
-            },
-            {
-                title: "Predator's gaze",
-                technique: 'Oil on canvas',
-                dimensions: '28" × 22"',
-                year: 2024,
-                price: 1700,
-                image_path: '/images/tiger.jpg',
-                description: 'An original artwork using a photo taken by David Whelan as a reference',
-                category: 'Animals',
-                featured: 1
-            }
-        ];
-
-        // Check if artworks table is empty before inserting
-        db.get("SELECT COUNT(*) as count FROM artworks", (err, row) => {
-            if (row && row.count === 0) {
-                initialArtworks.forEach(artwork => {
-                    db.run(
-                        `INSERT INTO artworks (title, artist, technique, dimensions, year, price, image_path, description, category, featured)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                        [artwork.title, 'Daamitha', artwork.technique, artwork.dimensions, artwork.year, artwork.price, artwork.image_path, artwork.description, artwork.category, artwork.featured]
-                    );
-                });
-                console.log('Initial artworks added to database (6 featured on homepage)');
-            }
-        });
-    });
+    console.log('✅ Database initialization complete');
+  } catch (error) {
+    console.error('❌ Database initialization error:', error);
+  }
 };
+
+// Initialize artworks
+function initializeArtworks(db) {
+  const initialArtworks = [
+    {
+      title: 'Spirit Twin',
+      technique: 'Oil on linen canvas',
+      dimensions: '30" × 24"',
+      year: 2024,
+      price: 1800,
+      image_path: '/images/abstract.wolf&woman.jpg',
+      description: 'Inspired by a painting done by Dimitra Milan',
+      category: 'Contemporary',
+      featured: 1
+    },
+    {
+      title: 'Deep within thought',
+      technique: 'Oil on canvas',
+      dimensions: '36" × 28"',
+      year: 2024,
+      price: 2400,
+      image_path: '/images/cat-oils.jpg',
+      description: 'An original artwork, capturing a cat staring off into the distance deep within thought',
+      category: 'Animals',
+      featured: 1
+    },
+    {
+      title: 'Treetop Reverie',
+      technique: 'Oil on canvas',
+      dimensions: '24" × 20"',
+      year: 2023,
+      price: 1400,
+      image_path: '/images/monkey-oils.jpg',
+      description: 'An original piece, depicting the playful nature of 3 chimps within their habitat. A photo was used as a reference to help create this piece',
+      category: 'Animals',
+      featured: 1
+    },
+    {
+      title: 'Feathered Jewel',
+      technique: 'Oil on linen canvas',
+      dimensions: '32" × 26"',
+      year: 2024,
+      price: 2000,
+      image_path: '/images/peacock-feather.jpg',
+      description: 'Capturing the elegance and intricacy of a peacock feather',
+      category: 'Nature',
+      featured: 1
+    },
+    {
+      title: "Mother's Love",
+      technique: 'Oil on canvas',
+      dimensions: '22" × 18"',
+      year: 2024,
+      price: 1600,
+      image_path: '/images/penguins.jpg',
+      description: 'Capturing the raw emotion between a mother and a child',
+      category: 'Animals',
+      featured: 1
+    },
+    {
+      title: "Predator's gaze",
+      technique: 'Oil on canvas',
+      dimensions: '28" × 22"',
+      year: 2024,
+      price: 1700,
+      image_path: '/images/tiger.jpg',
+      description: 'An original artwork using a photo taken by David Whelan as a reference',
+      category: 'Animals',
+      featured: 1
+    }
+  ];
+
+  // Check if artworks table is empty before inserting
+  db.get("SELECT COUNT(*) as count FROM artworks", (err, row) => {
+    if (row && row.count === 0) {
+      initialArtworks.forEach(artwork => {
+        db.run(
+          `INSERT INTO artworks (title, artist, technique, dimensions, year, price, image_path, description, category, featured)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [artwork.title, 'Daamitha', artwork.technique, artwork.dimensions, artwork.year, artwork.price, artwork.image_path, artwork.description, artwork.category, artwork.featured]
+        );
+      });
+      console.log('✅ Initial artworks added to database (6 featured on homepage)');
+    }
+  });
+}
+
+// Helper functions for new tables
+
+/**
+ * Create a new order
+ */
+function createOrder(orderData) {
+  return new Promise((resolve, reject) => {
+    const id = 'order_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    const {
+      client_id, artwork_id, type, amount, currency = 'GBP',
+      title, description, notes, client_email, client_name, shipping_address
+    } = orderData;
+
+    db.run(
+      `INSERT INTO orders (id, client_id, artwork_id, type, amount, currency, title, description, notes, client_email, client_name, shipping_address)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, client_id, artwork_id, type, amount, currency, title, description, notes, client_email, client_name, shipping_address],
+      function(err) {
+        if (err) reject(err);
+        else resolve({ id, ...orderData });
+      }
+    );
+  });
+}
+
+/**
+ * Get order by ID
+ */
+function getOrder(orderId) {
+  return new Promise((resolve, reject) => {
+    db.get("SELECT * FROM orders WHERE id = ?", [orderId], (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+}
+
+/**
+ * Update order status
+ */
+function updateOrderStatus(orderId, status, notes = null) {
+  return new Promise((resolve, reject) => {
+    const query = notes
+      ? "UPDATE orders SET status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+      : "UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+    const params = notes ? [status, notes, orderId] : [status, orderId];
+
+    db.run(query, params, function(err) {
+      if (err) reject(err);
+      else resolve({ orderId, status, updated: this.changes > 0 });
+    });
+  });
+}
+
+/**
+ * Get orders by client
+ */
+function getOrdersByClient(clientId) {
+  return new Promise((resolve, reject) => {
+    db.all("SELECT * FROM orders WHERE client_id = ? ORDER BY created_at DESC", [clientId], (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+}
+
+/**
+ * Save conversation
+ */
+function saveConversation(conversationData) {
+  return new Promise((resolve, reject) => {
+    const { id, client_id, client_email, messages, context, summary } = conversationData;
+
+    db.run(
+      `INSERT OR REPLACE INTO conversations (id, client_id, client_email, messages, context, summary, last_message_at)
+       VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      [id, client_id, client_email, JSON.stringify(messages), context, summary],
+      function(err) {
+        if (err) reject(err);
+        else resolve({ id, saved: true });
+      }
+    );
+  });
+}
+
+/**
+ * Get conversation by ID
+ */
+function getConversation(conversationId) {
+  return new Promise((resolve, reject) => {
+    db.get("SELECT * FROM conversations WHERE id = ?", [conversationId], (err, row) => {
+      if (err) reject(err);
+      else if (row) {
+        row.messages = JSON.parse(row.messages || '[]');
+        resolve(row);
+      } else {
+        resolve(null);
+      }
+    });
+  });
+}
+
+/**
+ * Create invoice
+ */
+function createInvoice(invoiceData) {
+  return new Promise((resolve, reject) => {
+    const id = 'inv_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    const { order_id, polar_checkout_id, amount, currency = 'GBP' } = invoiceData;
+
+    db.run(
+      `INSERT INTO invoices (id, order_id, polar_checkout_id, amount, currency)
+       VALUES (?, ?, ?, ?, ?)`,
+      [id, order_id, polar_checkout_id, amount, currency],
+      function(err) {
+        if (err) reject(err);
+        else resolve({ id, ...invoiceData });
+      }
+    );
+  });
+}
+
+/**
+ * Update invoice status (for webhook handling)
+ */
+function updateInvoiceStatus(polarCheckoutId, status, polarPaymentId = null) {
+  return new Promise((resolve, reject) => {
+    const paidAt = status === 'paid' ? 'CURRENT_TIMESTAMP' : null;
+    db.run(
+      `UPDATE invoices SET status = ?, polar_payment_id = ?, paid_at = ${paidAt ? 'CURRENT_TIMESTAMP' : 'NULL'}, updated_at = CURRENT_TIMESTAMP
+       WHERE polar_checkout_id = ?`,
+      [status, polarPaymentId, polarCheckoutId],
+      function(err) {
+        if (err) reject(err);
+        else resolve({ polarCheckoutId, status, updated: this.changes > 0 });
+      }
+    );
+  });
+}
+
+/**
+ * Log email sent
+ */
+function logEmail(emailData) {
+  return new Promise((resolve, reject) => {
+    const id = 'email_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    const { order_id, client_id, recipient, subject, template, status = 'sent' } = emailData;
+
+    db.run(
+      `INSERT INTO email_log (id, order_id, client_id, recipient, subject, template, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [id, order_id, client_id, recipient, subject, template, status],
+      function(err) {
+        if (err) reject(err);
+        else resolve({ id, logged: true });
+      }
+    );
+  });
+}
+
+/**
+ * Get client by email (from Better Auth user table)
+ */
+function getClientByEmail(email) {
+  return new Promise((resolve, reject) => {
+    db.get("SELECT * FROM user WHERE email = ?", [email], (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+}
 
 // Initialize database on module load
 initializeDatabase();
 
+// Export database connection and helper functions
 module.exports = db;
+module.exports.createOrder = createOrder;
+module.exports.getOrder = getOrder;
+module.exports.updateOrderStatus = updateOrderStatus;
+module.exports.getOrdersByClient = getOrdersByClient;
+module.exports.saveConversation = saveConversation;
+module.exports.getConversation = getConversation;
+module.exports.createInvoice = createInvoice;
+module.exports.updateInvoiceStatus = updateInvoiceStatus;
+module.exports.logEmail = logEmail;
+module.exports.getClientByEmail = getClientByEmail;

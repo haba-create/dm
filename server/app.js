@@ -54,13 +54,15 @@ app.use('/images', express.static(path.join(__dirname, '..')));
 
 // Import routes (we'll create these next)
 const authRoutes = require('./routes/auth');
+const clientAuthRoutes = require('./routes/client-auth');
 const artworkRoutes = require('./routes/artworks');
 const contentRoutes = require('./routes/content');
 const chatkitRoutes = require('./routes/chatkit');
 const agentRoutes = require('./routes/agent');
 
 // API routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes);                    // Legacy admin auth (JWT)
+app.use('/api/client-auth', clientAuthRoutes);       // Client auth (Better Auth)
 app.use('/api/artworks', artworkRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/chatkit', chatkitRoutes);
@@ -74,6 +76,16 @@ app.get('/', (req, res) => {
 // Serve pricelist page
 app.get('/pricelist', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/pricelist.html'));
+});
+
+// Serve client portal page
+app.get('/client', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/client-auth.html'));
+});
+
+// Serve client portal (alias for /login)
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/client-auth.html'));
 });
 
 // Error handling middleware
@@ -98,6 +110,13 @@ app.listen(PORT, () => {
     console.log(`JWT_SECRET: ${process.env.JWT_SECRET ? 'SET (length: ' + process.env.JWT_SECRET.length + ')' : 'NOT SET'}`);
     console.log(`ANTHROPIC_API_KEY: ${process.env.ANTHROPIC_API_KEY ? 'SET (length: ' + process.env.ANTHROPIC_API_KEY.length + ')' : 'NOT SET'}`);
     console.log(`CHATKIT_WORKFLOW_ID: ${process.env.CHATKIT_WORKFLOW_ID || 'NOT SET'}`);
+
+    // Better Auth configuration
+    console.log('\n🔐 Better Auth Configuration:');
+    console.log(`BETTER_AUTH_SECRET: ${process.env.BETTER_AUTH_SECRET ? 'SET' : 'NOT SET (using dev default)'}`);
+    console.log(`BETTER_AUTH_URL: ${process.env.BETTER_AUTH_URL || 'http://localhost:3000'}`);
+    console.log(`GOOGLE_CLIENT_ID: ${process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET'}`);
+    console.log(`POLAR_ACCESS_TOKEN: ${process.env.POLAR_ACCESS_TOKEN ? 'SET' : 'NOT SET'}`);
     console.log('');
 
     // Warn if using default JWT secret

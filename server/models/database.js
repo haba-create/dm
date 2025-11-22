@@ -31,6 +31,7 @@ const initializeDatabase = () => {
                 year INTEGER,
                 price REAL,
                 image_path TEXT,
+                thumbnail_path TEXT,
                 description TEXT,
                 category TEXT,
                 available INTEGER DEFAULT 1,
@@ -40,6 +41,14 @@ const initializeDatabase = () => {
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `);
+
+        // Add thumbnail_path column if it doesn't exist (migration for existing DBs)
+        db.run(`ALTER TABLE artworks ADD COLUMN thumbnail_path TEXT`, (err) => {
+            // Ignore error if column already exists
+            if (err && !err.message.includes('duplicate column name')) {
+                console.error('Migration error:', err.message);
+            }
+        });
 
         // Site content table
         db.run(`

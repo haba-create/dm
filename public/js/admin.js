@@ -215,6 +215,170 @@ function setupEventListeners() {
                 break;
         }
     });
+
+    // Setup Drag & Drop functionality
+    setupDropzone();
+}
+
+// Setup Drag & Drop Upload Zone
+function setupDropzone() {
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('image-upload');
+    const previewContainer = document.getElementById('image-preview-container');
+    const removeBtn = document.getElementById('remove-image-btn');
+
+    if (!dropzone || !fileInput) return;
+
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Highlight drop zone when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, () => {
+            dropzone.classList.add('dragover');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, () => {
+            dropzone.classList.remove('dragover');
+        }, false);
+    });
+
+    // Handle dropped files
+    dropzone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleImageFile(files[0]);
+        }
+    }, false);
+
+    // Handle file input change
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleImageFile(e.target.files[0]);
+        }
+    });
+
+    // Handle remove button
+    if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+            clearImagePreview();
+        });
+    }
+}
+
+// Handle image file selection
+function handleImageFile(file) {
+    const previewContainer = document.getElementById('image-preview-container');
+    const preview = document.getElementById('image-preview');
+    const filename = document.getElementById('image-filename');
+    const sizeEl = document.getElementById('image-size');
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('image-upload');
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        alert('Please select an image file (JPEG, PNG, GIF, or WebP)');
+        return;
+    }
+
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+        alert('Image size must be less than 10MB');
+        return;
+    }
+
+    // Create a new FileList with the dropped file
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+
+    // Preview the image
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        preview.src = e.target.result;
+        filename.textContent = file.name;
+
+        // Format file size
+        const sizeKB = file.size / 1024;
+        const sizeMB = sizeKB / 1024;
+        sizeEl.textContent = sizeMB >= 1
+            ? `${sizeMB.toFixed(1)} MB`
+            : `${sizeKB.toFixed(1)} KB`;
+
+        // Hide dropzone, show preview
+        dropzone.style.display = 'none';
+        previewContainer.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+// Clear image preview
+function clearImagePreview() {
+    const previewContainer = document.getElementById('image-preview-container');
+    const preview = document.getElementById('image-preview');
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('image-upload');
+    const optimizationInfo = document.getElementById('optimization-info');
+
+    if (preview) preview.src = '';
+    if (fileInput) fileInput.value = '';
+    if (previewContainer) previewContainer.style.display = 'none';
+    if (dropzone) dropzone.style.display = 'block';
+    if (optimizationInfo) optimizationInfo.style.display = 'none';
+}
+
+// Show upload progress
+function showUploadProgress(show = true) {
+    const progressContainer = document.getElementById('upload-progress');
+    if (progressContainer) {
+        if (show) {
+            progressContainer.classList.add('active');
+        } else {
+            progressContainer.classList.remove('active');
+        }
+    }
+}
+
+// Update upload progress
+function updateUploadProgress(percent, status = 'Uploading...') {
+    const progressBar = document.getElementById('progress-bar');
+    const progressPercent = document.getElementById('progress-percent');
+    const progressStatus = document.getElementById('progress-status');
+
+    if (progressBar) progressBar.style.width = `${percent}%`;
+    if (progressPercent) progressPercent.textContent = `${Math.round(percent)}%`;
+    if (progressStatus) progressStatus.textContent = status;
+}
+
+// Show optimization info after upload
+function showOptimizationInfo(processing) {
+    const optimizationInfo = document.getElementById('optimization-info');
+    const sizeEl = document.getElementById('image-size');
+
+    if (optimizationInfo && processing) {
+        const originalKB = (processing.originalSize / 1024).toFixed(1);
+        const optimizedKB = (processing.optimizedSize / 1024).toFixed(1);
+
+        optimizationInfo.innerHTML = `Image optimized: ${originalKB}KB &rarr; ${optimizedKB}KB (${processing.savings}% saved)`;
+        optimizationInfo.style.display = 'block';
+
+        if (sizeEl) {
+            sizeEl.textContent = `${optimizedKB} KB`;
+            sizeEl.classList.add('optimized');
+        }
+    }
 }
 
 // Load Dashboard
@@ -675,10 +839,22 @@ window.closeModal = function() {
     document.getElementById('artwork-form').reset();
     delete document.getElementById('artwork-form').dataset.artworkId;
 
-    // Hide image preview
-    const previewContainer = document.getElementById('image-preview-container');
-    if (previewContainer) {
-        previewContainer.style.display = 'none';
+    // Reset dropzone and image preview
+    clearImagePreview();
+
+    // Hide upload progress
+    showUploadProgress(false);
+
+    // Reset optimization info
+    const optimizationInfo = document.getElementById('optimization-info');
+    if (optimizationInfo) {
+        optimizationInfo.style.display = 'none';
+    }
+
+    // Reset size badge style
+    const sizeEl = document.getElementById('image-size');
+    if (sizeEl) {
+        sizeEl.classList.remove('optimized');
     }
 }
 
@@ -702,7 +878,7 @@ window.previewImage = function(event) {
     }
 }
 
-// Handle Artwork Form Submission
+// Handle Artwork Form Submission with Progress Tracking
 async function handleArtworkSubmit(e) {
     e.preventDefault();
 
@@ -717,26 +893,96 @@ async function handleArtworkSubmit(e) {
     // Convert available checkbox to number
     formData.set('available', form.elements.available.checked ? '1' : '0');
 
-    try {
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Authorization': `Bearer ${token}`
-            },
-            body: formData
+    // Check if there's an image to upload
+    const hasImage = formData.get('image') && formData.get('image').size > 0;
+
+    if (hasImage) {
+        // Use XMLHttpRequest for progress tracking
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+
+            // Show progress bar
+            showUploadProgress(true);
+            updateUploadProgress(0, 'Preparing upload...');
+
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percent = (e.loaded / e.total) * 80; // Reserve 20% for processing
+                    updateUploadProgress(percent, 'Uploading image...');
+                }
+            });
+
+            xhr.addEventListener('load', async () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    updateUploadProgress(90, 'Processing image...');
+
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+
+                        // Show optimization info if available
+                        if (response.processing) {
+                            updateUploadProgress(100, 'Optimization complete!');
+                            showOptimizationInfo(response.processing);
+                        } else {
+                            updateUploadProgress(100, 'Upload complete!');
+                        }
+
+                        setTimeout(() => {
+                            showUploadProgress(false);
+                            alert(artworkId ? 'Artwork updated successfully' : 'Artwork added successfully');
+                            closeModal();
+                            loadArtworks();
+                            loadDashboard();
+                            resolve(response);
+                        }, 1000);
+                    } catch (parseError) {
+                        showUploadProgress(false);
+                        alert(artworkId ? 'Artwork updated successfully' : 'Artwork added successfully');
+                        closeModal();
+                        loadArtworks();
+                        loadDashboard();
+                        resolve();
+                    }
+                } else {
+                    showUploadProgress(false);
+                    alert('Failed to save artwork');
+                    reject(new Error('Upload failed'));
+                }
+            });
+
+            xhr.addEventListener('error', () => {
+                showUploadProgress(false);
+                alert('Failed to save artwork. Network error.');
+                reject(new Error('Network error'));
+            });
+
+            xhr.open(method, url);
+            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+            xhr.send(formData);
         });
+    } else {
+        // No image, use regular fetch
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
 
-        if (!response.ok) {
-            throw new Error('Failed to save artwork');
+            if (!response.ok) {
+                throw new Error('Failed to save artwork');
+            }
+
+            alert(artworkId ? 'Artwork updated successfully' : 'Artwork added successfully');
+            closeModal();
+            await loadArtworks();
+            await loadDashboard();
+        } catch (error) {
+            console.error('Failed to save artwork:', error);
+            alert('Failed to save artwork');
         }
-
-        alert(artworkId ? 'Artwork updated successfully' : 'Artwork added successfully');
-        closeModal();
-        await loadArtworks();
-        await loadDashboard();
-    } catch (error) {
-        console.error('Failed to save artwork:', error);
-        alert('Failed to save artwork');
     }
 }
 

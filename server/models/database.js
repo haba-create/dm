@@ -25,6 +25,14 @@ const initializeDatabase = async () => {
     // Initialize default site content
     initializeSiteContent(db);
 
+    // Add thumbnail_path column if it doesn't exist (migration for existing DBs)
+    db.run(`ALTER TABLE artworks ADD COLUMN thumbnail_path TEXT`, (err) => {
+      // Ignore error if column already exists
+      if (err && !err.message.includes('duplicate column name')) {
+        console.error('Migration error:', err.message);
+      }
+    });
+
     // Insert initial artworks if table is empty
     initializeArtworks(db);
 

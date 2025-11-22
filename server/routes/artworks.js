@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const db = require('../models/database');
 const authMiddleware = require('../middleware/auth');
+const { imageProcessorMiddleware, deleteImageWithThumbnail } = require('../middleware/imageProcessor');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -125,7 +126,7 @@ router.patch('/:id/featured', authMiddleware, (req, res) => {
 });
 
 // Create new artwork (admin only)
-router.post('/', authMiddleware, upload.single('image'), (req, res) => {
+router.post('/', authMiddleware, upload.single('image'), imageProcessorMiddleware, (req, res) => {
     const {
         title,
         artist = 'Daamitha',
@@ -140,11 +141,21 @@ router.post('/', authMiddleware, upload.single('image'), (req, res) => {
     } = req.body;
 
     const imagePath = req.file ? `/uploads/artworks/${req.file.filename}` : null;
+    const thumbnailPath = req.file && req.file.thumbnailFilename
+        ? `/uploads/artworks/${req.file.thumbnailFilename}`
+        : null;
+
+    // Include image processing stats in response if available
+    const processingInfo = req.imageProcessing ? {
+        originalSize: req.imageProcessing.mainImage.originalSize,
+        optimizedSize: req.imageProcessing.mainImage.optimizedSize,
+        savings: req.imageProcessing.mainImage.savings
+    } : null;
 
     db.run(
-        `INSERT INTO artworks (title, artist, technique, dimensions, year, price, image_path, description, category, available, featured)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [title, artist, technique, dimensions, year, price, imagePath, description, category, available, featured],
+        `INSERT INTO artworks (title, artist, technique, dimensions, year, price, image_path, thumbnail_path, description, category, available, featured)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [title, artist, technique, dimensions, year, price, imagePath, thumbnailPath, description, category, available, featured],
         function(err) {
             if (err) {
                 return res.status(500).json({ error: 'Failed to create artwork' });
@@ -158,16 +169,18 @@ router.post('/', authMiddleware, upload.single('image'), (req, res) => {
                 year,
                 price,
                 image_path: imagePath,
+                thumbnail_path: thumbnailPath,
                 description,
                 category,
-                available
+                available,
+                processing: processingInfo
             });
         }
     );
 });
 
 // Update artwork (admin only)
-router.put('/:id', authMiddleware, upload.single('image'), (req, res) => {
+router.put('/:id', authMiddleware, upload.single('image'), imageProcessorMiddleware, (req, res) => {
     const {
         title,
         artist,
@@ -182,28 +195,36 @@ router.put('/:id', authMiddleware, upload.single('image'), (req, res) => {
     } = req.body;
 
     // First get the current artwork to handle image update
-    db.get("SELECT image_path FROM artworks WHERE id = ?", [req.params.id], (err, row) => {
+    db.get("SELECT image_path, thumbnail_path FROM artworks WHERE id = ?", [req.params.id], (err, row) => {
         if (err || !row) {
             return res.status(404).json({ error: 'Artwork not found' });
         }
 
         const imagePath = req.file ? `/uploads/artworks/${req.file.filename}` : row.image_path;
+        const thumbnailPath = req.file && req.file.thumbnailFilename
+            ? `/uploads/artworks/${req.file.thumbnailFilename}`
+            : row.thumbnail_path;
 
-        // Delete old image if new one is uploaded
+        // Delete old image and thumbnail if new one is uploaded
         if (req.file && row.image_path && row.image_path.startsWith('/uploads/')) {
             const oldImagePath = path.join(__dirname, '../..', row.image_path);
-            fs.unlink(oldImagePath, (err) => {
-                if (err) console.error('Failed to delete old image:', err);
-            });
+            deleteImageWithThumbnail(oldImagePath);
         }
+
+        // Include image processing stats in response if available
+        const processingInfo = req.imageProcessing ? {
+            originalSize: req.imageProcessing.mainImage.originalSize,
+            optimizedSize: req.imageProcessing.mainImage.optimizedSize,
+            savings: req.imageProcessing.mainImage.savings
+        } : null;
 
         db.run(
             `UPDATE artworks
              SET title = ?, artist = ?, technique = ?, dimensions = ?, year = ?,
-                 price = ?, image_path = ?, description = ?, category = ?, available = ?, featured = ?,
+                 price = ?, image_path = ?, thumbnail_path = ?, description = ?, category = ?, available = ?, featured = ?,
                  updated_at = CURRENT_TIMESTAMP
              WHERE id = ?`,
-            [title, artist, technique, dimensions, year, price, imagePath, description, category, available, featured, req.params.id],
+            [title, artist, technique, dimensions, year, price, imagePath, thumbnailPath, description, category, available, featured, req.params.id],
             function(err) {
                 if (err) {
                     return res.status(500).json({ error: 'Failed to update artwork' });
@@ -211,7 +232,10 @@ router.put('/:id', authMiddleware, upload.single('image'), (req, res) => {
                 if (this.changes === 0) {
                     return res.status(404).json({ error: 'Artwork not found' });
                 }
-                res.json({ message: 'Artwork updated successfully' });
+                res.json({
+                    message: 'Artwork updated successfully',
+                    processing: processingInfo
+                });
             }
         );
     });
@@ -220,17 +244,15 @@ router.put('/:id', authMiddleware, upload.single('image'), (req, res) => {
 // Delete artwork (admin only)
 router.delete('/:id', authMiddleware, (req, res) => {
     // First get the artwork to delete associated image
-    db.get("SELECT image_path FROM artworks WHERE id = ?", [req.params.id], (err, row) => {
+    db.get("SELECT image_path, thumbnail_path FROM artworks WHERE id = ?", [req.params.id], (err, row) => {
         if (err || !row) {
             return res.status(404).json({ error: 'Artwork not found' });
         }
 
-        // Delete the image file if it exists in uploads
+        // Delete the image file and thumbnail if they exist in uploads
         if (row.image_path && row.image_path.startsWith('/uploads/')) {
             const imagePath = path.join(__dirname, '../..', row.image_path);
-            fs.unlink(imagePath, (err) => {
-                if (err) console.error('Failed to delete image:', err);
-            });
+            deleteImageWithThumbnail(imagePath);
         }
 
         // Delete from database

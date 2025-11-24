@@ -21,7 +21,7 @@ function initializeSchema(db) {
       // BETTER AUTH TABLES
       // ============================================
 
-      // Users table (Better Auth compatible + custom fields)
+      // Users table (Better Auth compatible + CRM fields)
       db.run(`
         CREATE TABLE IF NOT EXISTS user (
           id TEXT PRIMARY KEY,
@@ -32,10 +32,20 @@ function initializeSchema(db) {
           role TEXT DEFAULT 'client',
           phone TEXT,
           address TEXT,
+          company TEXT,
+          notes TEXT,
+          tags TEXT,
+          lastContactedAt DATETIME,
           createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
           updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `);
+
+      // Add CRM columns if they don't exist (for existing databases)
+      db.run(`ALTER TABLE user ADD COLUMN company TEXT`, () => {});
+      db.run(`ALTER TABLE user ADD COLUMN notes TEXT`, () => {});
+      db.run(`ALTER TABLE user ADD COLUMN tags TEXT`, () => {});
+      db.run(`ALTER TABLE user ADD COLUMN lastContactedAt DATETIME`, () => {});
 
       // Sessions table (Better Auth)
       db.run(`

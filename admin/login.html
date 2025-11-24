@@ -166,6 +166,22 @@
         .back-link a:hover {
             color: var(--deep-saffron);
         }
+
+        .forgot-password {
+            text-align: right;
+            margin-top: -0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .forgot-password a {
+            color: var(--deep-teal);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .forgot-password a:hover {
+            color: var(--deep-saffron);
+        }
     </style>
 </head>
 <body>
@@ -180,12 +196,16 @@
         <form id="loginForm">
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" name="email" required autocomplete="email">
             </div>
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
+                <input type="password" id="password" name="password" required autocomplete="current-password">
+            </div>
+
+            <div class="forgot-password">
+                <a href="#" id="forgotPasswordLink">Forgot password?</a>
             </div>
 
             <button type="submit" id="submitBtn">Login to Dashboard</button>
@@ -201,6 +221,9 @@
     </div>
 
     <script>
+        // Better Auth sign-in endpoint
+        const AUTH_BASE = '/api/auth';
+
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -215,23 +238,44 @@
             loading.style.display = 'block';
 
             try {
-                const response = await fetch('/api/auth/login', {
+                // Use Better Auth sign-in endpoint
+                const response = await fetch(`${AUTH_BASE}/sign-in/email`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include', // Important for cookies
                     body: JSON.stringify({ email, password }),
                 });
 
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.error || 'Login failed');
+                    throw new Error(data.message || data.error || 'Login failed');
                 }
 
-                // Store token in localStorage
-                localStorage.setItem('authToken', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
+                // Verify user has admin role
+                const sessionResponse = await fetch(`${AUTH_BASE}/me`, {
+                    credentials: 'include'
+                });
+
+                const sessionData = await sessionResponse.json();
+
+                if (!sessionData.authenticated) {
+                    throw new Error('Failed to verify session');
+                }
+
+                if (sessionData.user.role !== 'admin') {
+                    // Sign out if not admin
+                    await fetch(`${AUTH_BASE}/sign-out`, {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                    throw new Error('Access denied. Admin privileges required.');
+                }
+
+                // Store user info for display (session is in httpOnly cookie)
+                localStorage.setItem('user', JSON.stringify(sessionData.user));
 
                 // Redirect to dashboard
                 window.location.href = '/admin/dashboard.html';
@@ -243,23 +287,51 @@
             }
         });
 
+        // Forgot password handler
+        document.getElementById('forgotPasswordLink').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+
+            if (!email) {
+                alert('Please enter your email address first.');
+                document.getElementById('email').focus();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${AUTH_BASE}/forgot-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email }),
+                });
+
+                if (response.ok) {
+                    alert('If an account exists with this email, you will receive password reset instructions.');
+                } else {
+                    const data = await response.json();
+                    alert(data.message || 'Failed to send reset email. Please try again.');
+                }
+            } catch (error) {
+                alert('Failed to send reset email. Please try again later.');
+            }
+        });
+
         // Check if already logged in
         window.addEventListener('load', async () => {
-            const token = localStorage.getItem('authToken');
-            if (token) {
-                try {
-                    const response = await fetch('/api/auth/verify', {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
+            try {
+                const response = await fetch(`${AUTH_BASE}/me`, {
+                    credentials: 'include'
+                });
 
-                    if (response.ok) {
-                        window.location.href = '/admin/dashboard.html';
-                    }
-                } catch (error) {
-                    console.error('Token verification failed');
+                const data = await response.json();
+
+                if (data.authenticated && data.user.role === 'admin') {
+                    window.location.href = '/admin/dashboard.html';
                 }
+            } catch (error) {
+                console.error('Session check failed:', error);
             }
         });
     </script>

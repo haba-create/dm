@@ -60,6 +60,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/admin', express.static(path.join(__dirname, '../admin')));
+app.use('/docs', express.static(path.join(__dirname, '../docs')));
 
 // Serve existing images from root directory
 app.use('/images', express.static(path.join(__dirname, '..')));

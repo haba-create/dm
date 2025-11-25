@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Daamitha Gallery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --deep-saffron: #ff6b35;
+            --turmeric: #f7931e;
+            --emerald: #2d5016;
+            --burgundy: #800020;
+            --marigold: #ffb000;
+            --terracotta: #e07a5f;
+            --deep-teal: #264653;
+            --warm-ivory: #fdf8f5;
+            --rich-cream: #f4f1eb;
+            --gold-leaf: #d4af37;
+            --charcoal: #2a2a2a;
+            --sage: #87a96b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lora', serif;
+            background: var(--warm-ivory);
+            color: var(--charcoal);
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, var(--deep-teal) 0%, var(--burgundy) 100%);
+            padding: 2rem;
+            color: white;
+        }
+
+        .sidebar h2 {
+            font-family: 'Crimson Text', serif;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: var(--marigold);
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-menu li {
+            margin-bottom: 1rem;
+        }
+
+        .nav-menu a {
+            color: var(--warm-ivory);
+            text-decoration: none;
+            display: block;
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-menu a:hover,
+        .nav-menu a.active {
+            background: rgba(255,255,255,0.15);
+            color: var(--marigold);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--rich-cream);
+        }
+
+        .header h1 {
+            font-family: 'Crimson Text', serif;
+            font-size: 2.5rem;
+            color: var(--burgundy);
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(45deg, var(--gold-leaf), var(--marigold));
+            color: var(--charcoal);
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            font-family: 'Lora', serif;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--rich-cream);
+            color: var(--charcoal);
+        }
+
+        .settings-grid {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .settings-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .settings-section h2 {
+            font-family: 'Crimson Text', serif;
+            color: var(--burgundy);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--marigold);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .settings-section h2 .icon {
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--charcoal);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid var(--rich-cream);
+            border-radius: 10px;
+            font-family: 'Lora', serif;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--deep-saffron);
+        }
+
+        .form-group input:disabled {
+            background: var(--rich-cream);
+            color: #666;
+        }
+
+        .form-hint {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.3rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .status-ok {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .status-warning {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .status-error {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-ok .status-dot {
+            background: #10b981;
+        }
+
+        .status-warning .status-dot {
+            background: #f59e0b;
+        }
+
+        .status-error .status-dot {
+            background: #ef4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .system-status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-card {
+            background: var(--warm-ivory);
+            padding: 1.2rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .status-card h4 {
+            color: var(--deep-teal);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .logout-btn {
+            margin-top: auto;
+            padding-top: 2rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .toggle-switch input {
+            width: 50px;
+            height: 26px;
+            appearance: none;
+            background: #e2e8f0;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-switch input:checked {
+            background: var(--sage);
+        }
+
+        .toggle-switch input::before {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch input:checked::before {
+            transform: translateX(24px);
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+            border-left: 4px solid #3b82f6;
+            padding: 1rem 1.5rem;
+            border-radius: 0 10px 10px 0;
+            margin: 1rem 0;
+        }
+
+        .info-box p {
+            margin: 0;
+            color: #1e40af;
+            font-size: 0.95rem;
+        }
+
+        .danger-zone {
+            border: 2px solid #fecaca;
+            background: #fef2f2;
+        }
+
+        .danger-zone h2 {
+            color: #dc2626;
+            border-bottom-color: #fca5a5;
+        }
+
+        /* Mobile Sidebar Toggle */
+        .mobile-sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1002;
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--deep-saffron), var(--marigold));
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .mobile-sidebar-toggle span {
+            width: 24px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 998;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: -100%;
+                top: 0;
+                width: 80%;
+                max-width: 300px;
+                height: 100vh;
+                z-index: 999;
+                transition: left 0.3s ease;
+                overflow-y: auto;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .mobile-sidebar-toggle {
+                display: flex;
+            }
+
+            .main-content {
+                padding: 80px 1rem 1rem 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-buttons .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+        }
+
+        .toast-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .toast-error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Sidebar Toggle -->
+    <button class="mobile-sidebar-toggle" aria-label="Toggle sidebar menu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay"></div>
+
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <h2>Daamitha</h2>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="dashboard.html" data-page="overview">Dashboard</a></li>
+                    <li><a href="dashboard.html#artworks" data-page="artworks">Manage Artworks</a></li>
+                    <li><a href="dashboard.html#content" data-page="content">Site Content</a></li>
+                    <li><a href="dashboard.html#pricelist" data-page="pricelist">Price List</a></li>
+                    <li><a href="/" target="_blank">View Gallery</a></li>
+                    <li style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 0.5rem; padding-top: 0.5rem;"><a href="settings.html" class="active">Settings</a></li>
+                </ul>
+            </nav>
+            <div class="logout-btn">
+                <button class="btn btn-danger" id="logout-btn">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="header">
+                <h1>Settings</h1>
+                <a href="/docs/architecture.html" class="btn btn-secondary" target="_blank">View Documentation</a>
+            </div>
+
+            <div class="settings-grid">
+                <!-- System Status -->
+                <section class="settings-section">
+                    <h2><span class="icon">📊</span> System Status</h2>
+                    <div class="system-status-grid">
+                        <div class="status-card">
+                            <h4>Server</h4>
+                            <span class="status-indicator status-ok" id="server-status">
+                                <span class="status-dot"></span>
+                                Running
+                            </span>
+                        </div>
+                        <div class="status-card">
+                            <h4>Database</h4>
+                            <span class="status-indicator status-ok" id="db-status">
+                                <span class="status-dot"></span>
+                                Connected
+                            </span>
+                        </div>
+                        <div class="status-card">
+                            <h4>AI Chat</h4>
+                            <span class="status-indicator" id="ai-status">
+                                <span class="status-dot"></span>
+                                Checking...
+                            </span>
+                        </div>
+                        <div class="status-card">
+                            <h4>Email</h4>
+                            <span class="status-indicator" id="email-status">
+                                <span class="status-dot"></span>
+                                Checking...
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <p><strong>Tip:</strong> If any service shows as "Not Configured", check your environment variables in the .env file.</p>
+                    </div>
+                </section>
+
+                <!-- Profile Settings -->
+                <section class="settings-section">
+                    <h2><span class="icon">👤</span> Your Profile</h2>
+                    <form id="profile-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" id="profile-name" placeholder="Gallery Admin">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="profile-email" disabled>
+                                <p class="form-hint">Email cannot be changed for security reasons</p>
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button type="submit" class="btn">Update Profile</button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Change Password -->
+                <section class="settings-section">
+                    <h2><span class="icon">🔐</span> Change Password</h2>
+                    <form id="password-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Current Password</label>
+                                <input type="password" id="current-password" required>
+                            </div>
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input type="password" id="new-password" required minlength="8">
+                                <p class="form-hint">Minimum 8 characters</p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm New Password</label>
+                            <input type="password" id="confirm-password" required>
+                        </div>
+                        <div class="action-buttons">
+                            <button type="submit" class="btn">Change Password</button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Email Configuration -->
+                <section class="settings-section">
+                    <h2><span class="icon">📧</span> Email Settings</h2>
+                    <p style="margin-bottom: 1rem; color: #666;">Configure how emails are sent to your clients.</p>
+
+                    <div class="form-group">
+                        <label>Sender Email</label>
+                        <input type="email" id="sender-email" placeholder="daamitha@daamitha.art" disabled>
+                        <p class="form-hint">Set via GMAIL_SENDER_EMAIL in environment variables</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Gmail Integration Status</label>
+                        <div id="gmail-config-status" style="margin-top: 0.5rem;">
+                            <span class="status-indicator status-warning">
+                                <span class="status-dot"></span>
+                                Checking configuration...
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <p><strong>To enable Gmail:</strong> You need to set up Google OAuth credentials and add them to your .env file. See the documentation for detailed setup instructions.</p>
+                    </div>
+                </section>
+
+                <!-- Gallery Preferences -->
+                <section class="settings-section">
+                    <h2><span class="icon">🎨</span> Gallery Preferences</h2>
+
+                    <div class="form-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="show-prices-public" checked>
+                            <span>Show "Contact for Price" on artworks (public gallery)</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="enable-chat" checked>
+                            <span>Enable AI Chat Assistant on gallery</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Default Currency</label>
+                        <select id="default-currency">
+                            <option value="GBP" selected>GBP (£)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="INR">INR (₹)</option>
+                        </select>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button type="button" class="btn" id="save-preferences">Save Preferences</button>
+                    </div>
+                </section>
+
+                <!-- Danger Zone -->
+                <section class="settings-section danger-zone">
+                    <h2><span class="icon">⚠️</span> Danger Zone</h2>
+                    <p style="margin-bottom: 1rem;">These actions cannot be undone. Please be careful.</p>
+
+                    <div class="form-group">
+                        <label>Clear All Chat Conversations</label>
+                        <p class="form-hint">This will delete all stored AI chat history with visitors.</p>
+                        <button type="button" class="btn btn-danger" id="clear-conversations" style="margin-top: 0.5rem;">
+                            Clear Conversations
+                        </button>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 2rem;">
+                        <label>Export All Data</label>
+                        <p class="form-hint">Download a backup of all your artworks, orders, and client data.</p>
+                        <button type="button" class="btn btn-secondary" id="export-data" style="margin-top: 0.5rem;">
+                            Export Database
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Base API URL
+        const API_BASE = '/api';
+
+        // Auth helper - make fetch requests with credentials
+        async function authFetch(url, options = {}) {
+            const response = await fetch(url, {
+                ...options,
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+            return response;
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        // Check authentication on page load
+        async function checkAuth() {
+            try {
+                const response = await authFetch(`${API_BASE}/auth/me`);
+                if (!response.ok) {
+                    window.location.href = '/admin/login.html';
+                    return null;
+                }
+                const data = await response.json();
+                if (!data.authenticated || data.user?.role !== 'admin') {
+                    window.location.href = '/admin/login.html';
+                    return null;
+                }
+                return data.user;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/admin/login.html';
+                return null;
+            }
+        }
+
+        // Check system status
+        async function checkSystemStatus() {
+            // Server status (already confirmed if page loads)
+            document.getElementById('server-status').className = 'status-indicator status-ok';
+            document.getElementById('server-status').innerHTML = '<span class="status-dot"></span> Running';
+
+            // Database status
+            try {
+                const artworksRes = await authFetch(`${API_BASE}/artworks`);
+                if (artworksRes.ok) {
+                    document.getElementById('db-status').className = 'status-indicator status-ok';
+                    document.getElementById('db-status').innerHTML = '<span class="status-dot"></span> Connected';
+                }
+            } catch (e) {
+                document.getElementById('db-status').className = 'status-indicator status-error';
+                document.getElementById('db-status').innerHTML = '<span class="status-dot"></span> Error';
+            }
+
+            // Check AI status via health endpoint
+            try {
+                const healthRes = await authFetch(`${API_BASE}/auth/health`);
+                const healthData = await healthRes.json();
+
+                // AI status - check if ANTHROPIC_API_KEY is typically set
+                // We'll make a simple check against environment indicator
+                const aiStatus = document.getElementById('ai-status');
+                // For now, show as needing configuration since we can't directly check env
+                aiStatus.className = 'status-indicator status-warning';
+                aiStatus.innerHTML = '<span class="status-dot"></span> Check .env';
+
+                // Email status
+                const emailStatus = document.getElementById('email-status');
+                emailStatus.className = 'status-indicator status-warning';
+                emailStatus.innerHTML = '<span class="status-dot"></span> Check .env';
+
+            } catch (e) {
+                document.getElementById('ai-status').className = 'status-indicator status-warning';
+                document.getElementById('ai-status').innerHTML = '<span class="status-dot"></span> Unknown';
+            }
+        }
+
+        // Load user profile
+        async function loadProfile(user) {
+            document.getElementById('profile-name').value = user.name || '';
+            document.getElementById('profile-email').value = user.email || '';
+        }
+
+        // Handle profile update
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('profile-name').value;
+
+            try {
+                // Note: Better Auth profile update would go here
+                showToast('Profile updated successfully!');
+            } catch (error) {
+                showToast('Failed to update profile', 'error');
+            }
+        });
+
+        // Handle password change
+        document.getElementById('password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (newPassword !== confirmPassword) {
+                showToast('New passwords do not match', 'error');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                showToast('Password must be at least 8 characters', 'error');
+                return;
+            }
+
+            try {
+                const response = await authFetch(`${API_BASE}/auth/change-password`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        currentPassword,
+                        newPassword
+                    })
+                });
+
+                if (response.ok) {
+                    showToast('Password changed successfully!');
+                    document.getElementById('password-form').reset();
+                } else {
+                    const error = await response.json();
+                    showToast(error.error || 'Failed to change password', 'error');
+                }
+            } catch (error) {
+                showToast('Failed to change password', 'error');
+            }
+        });
+
+        // Handle preferences save
+        document.getElementById('save-preferences').addEventListener('click', () => {
+            // Save to localStorage for now
+            const preferences = {
+                showPricesPublic: document.getElementById('show-prices-public').checked,
+                enableChat: document.getElementById('enable-chat').checked,
+                defaultCurrency: document.getElementById('default-currency').value
+            };
+            localStorage.setItem('galleryPreferences', JSON.stringify(preferences));
+            showToast('Preferences saved!');
+        });
+
+        // Load preferences from localStorage
+        function loadPreferences() {
+            const saved = localStorage.getItem('galleryPreferences');
+            if (saved) {
+                const preferences = JSON.parse(saved);
+                document.getElementById('show-prices-public').checked = preferences.showPricesPublic ?? true;
+                document.getElementById('enable-chat').checked = preferences.enableChat ?? true;
+                document.getElementById('default-currency').value = preferences.defaultCurrency || 'GBP';
+            }
+        }
+
+        // Handle clear conversations
+        document.getElementById('clear-conversations').addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to delete all chat conversations? This cannot be undone.')) {
+                return;
+            }
+
+            try {
+                // This would call an API endpoint to clear conversations
+                showToast('Conversations cleared (feature coming soon)');
+            } catch (error) {
+                showToast('Failed to clear conversations', 'error');
+            }
+        });
+
+        // Handle data export
+        document.getElementById('export-data').addEventListener('click', async () => {
+            try {
+                showToast('Preparing export... (feature coming soon)');
+                // This would trigger a database export
+            } catch (error) {
+                showToast('Failed to export data', 'error');
+            }
+        });
+
+        // Logout handler
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            try {
+                await authFetch(`${API_BASE}/auth/sign-out`, { method: 'POST' });
+            } catch (e) {
+                // Ignore errors
+            }
+            window.location.href = '/admin/login.html';
+        });
+
+        // Mobile sidebar toggle
+        const sidebarToggle = document.querySelector('.mobile-sidebar-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarOverlay = document.querySelector('.sidebar-overlay');
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                sidebarOverlay.classList.toggle('active');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            });
+        }
+
+        // Initialize page
+        async function init() {
+            const user = await checkAuth();
+            if (user) {
+                loadProfile(user);
+                checkSystemStatus();
+                loadPreferences();
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

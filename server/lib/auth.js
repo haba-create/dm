@@ -156,6 +156,7 @@ const auth = betterAuth({
 
 /**
  * Initialize default admin user in Better Auth system
+ * Uses Better Auth's API to ensure proper password hashing
  */
 async function initializeAdminUser() {
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@daamitha.art';
@@ -167,39 +168,40 @@ async function initializeAdminUser() {
 
     // Check if admin user exists in Better Auth user table
     const existingUser = db.prepare('SELECT * FROM user WHERE email = ?').get(adminEmail);
+    db.close();
 
     if (!existingUser) {
-      // Hash the password
-      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      // Use Better Auth's signUp API to create admin with proper password hashing
+      const result = await auth.api.signUpEmail({
+        body: {
+          email: adminEmail,
+          password: adminPassword,
+          name: adminName
+        }
+      });
 
-      // Create user ID
-      const userId = 'admin_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+      if (result && result.user) {
+        // Update the user's role to admin
+        const dbUpdate = new Database(dbPath);
+        dbUpdate.prepare('UPDATE user SET role = ? WHERE id = ?').run('admin', result.user.id);
+        dbUpdate.close();
 
-      // Insert user
-      db.prepare(`
-        INSERT INTO user (id, name, email, emailVerified, role, createdAt, updatedAt)
-        VALUES (?, ?, ?, 1, 'admin', datetime('now'), datetime('now'))
-      `).run(userId, adminName, adminEmail);
-
-      // Create credential account (email/password)
-      const accountId = 'acc_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
-      db.prepare(`
-        INSERT INTO account (id, accountId, providerId, userId, password, createdAt, updatedAt)
-        VALUES (?, ?, 'credential', ?, ?, datetime('now'), datetime('now'))
-      `).run(accountId, adminEmail, userId, hashedPassword);
-
-      console.log('✅ Admin user created in Better Auth system');
-      console.log('   Email:', adminEmail);
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('   Password:', adminPassword);
+        console.log('✅ Admin user created in Better Auth system');
+        console.log('   Email:', adminEmail);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('   Password:', adminPassword);
+        }
       }
     } else {
       console.log('✅ Admin user already exists in Better Auth system');
     }
-
-    db.close();
   } catch (error) {
-    console.error('Error initializing admin user:', error);
+    // If user already exists error, that's okay
+    if (error.message && error.message.includes('already exists')) {
+      console.log('✅ Admin user already exists in Better Auth system');
+    } else {
+      console.error('Error initializing admin user:', error);
+    }
   }
 }
 

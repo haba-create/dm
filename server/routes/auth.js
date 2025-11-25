@@ -17,8 +17,7 @@ const { toNodeHandler, fromNodeHeaders } = require('better-auth/node');
 
 const router = express.Router();
 
-// Initialize admin user on first load
-initializeAdminUser().catch(console.error);
+// Note: Admin user initialization is now handled by app.js after schema init
 
 // Create the Better Auth handler
 const authHandler = toNodeHandler(auth);
@@ -99,7 +98,8 @@ router.get('/verify', async (req, res) => {
 // - POST /forgot-password
 // - POST /reset-password
 // - OAuth callback routes
-router.all('/*', (req, res, next) => {
+// Note: Express 5 requires named parameters for wildcards
+router.all('/{*path}', (req, res, next) => {
   authHandler(req, res).catch(next);
 });
 

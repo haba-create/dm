@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const db = require('../models/database');
-const authMiddleware = require('../middleware/auth');
+const { authMiddleware } = require('../middleware/auth');
 const { imageProcessorMiddleware, deleteImageWithThumbnail } = require('../middleware/imageProcessor');
 
 // Configure multer for file uploads

@@ -43,8 +43,13 @@ if (process.env.NODE_ENV !== 'test') {
 app.use(compression());
 
 // CORS configuration for Better Auth (supports credentials/cookies)
+// In development, allow same-origin by default
+const corsOrigin = process.env.BETTER_AUTH_URL || process.env.NODE_ENV === 'production'
+    ? process.env.BETTER_AUTH_URL
+    : true; // Allow same-origin in development
+
 app.use(cors({
-    origin: process.env.BETTER_AUTH_URL || 'http://localhost:3000',
+    origin: corsOrigin,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']

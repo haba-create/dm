@@ -1,179 +1,160 @@
-# Daamitha - Gallery Management System
+# Daamitha Gallery - Your Art Management System
 
-A dynamic artist portfolio and gallery management system for contemporary oil paintings. This platform showcases the artwork of Daamitha, a medical student and traditional singer from India currently based in London, with a complete admin dashboard for content management.
+Welcome to your gallery website! This system helps you showcase your beautiful oil paintings to the world, manage client relationships, and handle inquiries - all from one place.
 
-## 🚀 MVP Features
+## Quick Start
 
-### 🔐 **Admin Dashboard**
-- Secure login system with JWT authentication
-- Full CRUD operations for artwork management
-- Dynamic content editing for all site sections
-- Image upload with automatic optimization
-- Private price list management
+**Your Gallery**: Visit your live website at your domain
+**Admin Dashboard**: Go to `/admin/login.html` to manage everything
+**Default Login**: `admin@daamitha.art` / `Admin@123`
 
-### 🎨 **Dynamic Gallery**
-- Artworks loaded dynamically from database
-- Real-time updates without code changes
-- Responsive gallery grid with animations
-- Public view (no prices) and admin view (with prices)
+> Remember to change the default password in production!
 
-### 🎵 **Cultural Heritage**
-- Integration of South Indian musical traditions
-- Story of multicultural artistic journey
-- Traditional songs and modern expression blend
+---
 
-### 📱 **Modern Web Experience**
-- Fully responsive design for all devices
-- Smooth scrolling navigation
-- Interactive hover effects and animations
-- Progressive loading with fade-in animations
-- Parallax scrolling effects
+## What Can You Do?
 
-### 💬 **Flowise Chatbot**
-- AI-powered gallery assistant
-- Answers questions about artworks and techniques
-- Helps with commission inquiries
-- Custom-trained on artist's background and portfolio
+### As a Gallery Owner
 
-### 📊 **Price List Page**
-- Secure authentication-protected pricing
-- Professional tabular layout
-- Export functionality for collectors
-- Real-time availability status
+| Feature | Description |
+|---------|-------------|
+| **Manage Artworks** | Add, edit, and remove paintings from your gallery |
+| **Update Prices** | Set and update prices (only you can see them) |
+| **Edit Website Content** | Change the text on your homepage without coding |
+| **Featured Artworks** | Choose which paintings appear on the homepage |
+| **Track Clients** | Keep notes on collectors and potential buyers |
+| **Send Emails** | Notify clients about new works or order updates |
 
-## 🛠️ Technology Stack
+### For Your Visitors
 
-- **Backend**: Node.js + Express.js
-- **Database**: SQLite (easily upgradeable to PostgreSQL)
-- **Authentication**: JWT with bcrypt
-- **Frontend**: Vanilla JavaScript with dynamic content loading
-- **File Storage**: Local filesystem (upgradeable to AWS S3)
-- **Chatbot**: Flowise AI integration
+| Feature | Description |
+|---------|-------------|
+| **Browse Gallery** | See all your beautiful artworks |
+| **AI Assistant** | Chat with your gallery assistant bot |
+| **Create Account** | Clients can sign up to save favorites |
+| **Contact You** | Easy ways to get in touch |
 
-## 📦 Installation
+---
 
-1. Clone the repository:
+## How the System Works
+
+```
+                    YOUR GALLERY WEBSITE
+    ┌─────────────────────────────────────────────────┐
+    │                                                 │
+    │   Public Gallery     Admin Dashboard            │
+    │   ┌──────────┐      ┌──────────────┐           │
+    │   │  Browse  │      │  Manage      │           │
+    │   │  Artworks│      │  Everything  │           │
+    │   │  Chat Bot│      │  CRM & Email │           │
+    │   └────┬─────┘      └──────┬───────┘           │
+    │        │                   │                    │
+    │        └───────┬───────────┘                    │
+    │                │                                │
+    │         ┌──────▼──────┐                        │
+    │         │   Database  │  Stores all your       │
+    │         │   (SQLite)  │  artworks, clients,    │
+    │         │             │  orders, and content   │
+    │         └─────────────┘                        │
+    │                                                 │
+    └─────────────────────────────────────────────────┘
+```
+
+For detailed technical documentation, see [docs/architecture.html](docs/architecture.html)
+
+---
+
+## Step-by-Step Guides
+
+### Adding a New Artwork
+
+1. Log into your Admin Dashboard
+2. Click **"+ Add New Artwork"**
+3. Fill in the details:
+   - **Title**: Name of your painting
+   - **Technique**: e.g., "Oil on canvas"
+   - **Dimensions**: e.g., '24" × 18"'
+   - **Price**: Your selling price (only you see this)
+   - **Category**: Contemporary, Animals, Nature, etc.
+4. Upload your image (drag & drop works!)
+5. Click **Save** - it's now live on your gallery!
+
+### Featuring Artworks on Homepage
+
+1. Go to **Manage Artworks**
+2. Find the painting you want to feature
+3. Click the **star icon** to toggle featured status
+4. Featured artworks appear prominently on your homepage
+
+### Editing Website Text
+
+1. Go to **Site Content** in the dashboard
+2. Edit the **Hero Section** (main banner text)
+3. Edit the **About Section** (your story)
+4. Click **Update** to save changes
+
+### Managing Client Relationships (CRM)
+
+Your AI assistant can help track:
+- Client contact information
+- Previous conversations
+- Order history
+- Personal notes (preferences, interests)
+
+---
+
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file with these settings:
+
 ```bash
-git clone <repository-url>
-cd dm
+# Required
+ADMIN_EMAIL=your@email.com
+ADMIN_PASSWORD=YourSecurePassword123
+BETTER_AUTH_SECRET=your-random-secret-key
+
+# For Email Notifications (Gmail)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REFRESH_TOKEN=your-refresh-token
+GMAIL_SENDER_EMAIL=your@gmail.com
+
+# For AI Chat (if using Claude)
+ANTHROPIC_API_KEY=your-api-key
 ```
 
-2. Install dependencies:
-```bash
-npm install
-```
+### Deployment
 
-3. Configure environment variables:
-```bash
-# Copy the example file
-cp .env.example .env
+This system is ready for deployment on:
+- **Railway** (recommended - easy setup)
+- **Vercel**
+- **Any Node.js hosting**
 
-# Edit .env file with your settings
-ADMIN_EMAIL=admin@daamitha.art
-ADMIN_PASSWORD=Admin@123
-JWT_SECRET=your_secret_key_here
-```
+---
 
-4. Start the development server:
-```bash
-npm run dev
-```
+## Support & Help
 
-5. Access the application:
-- Gallery: http://localhost:3000
-- Admin Dashboard: http://localhost:3000/admin/login.html
+- **Documentation**: See `/docs/architecture.html` for technical details
+- **Issues**: Report problems on GitHub Issues
+- **Updates**: Pull latest changes from the repository
 
-## 🚀 Deployment on Railway
+---
 
-1. Create a new project on Railway.app
-2. Connect your GitHub repository
-3. Add the following environment variables in Railway dashboard:
-   - `JWT_SECRET` - A long random string
-   - `ADMIN_EMAIL` - Your admin email
-   - `ADMIN_PASSWORD` - Your admin password
-   - `NODE_ENV` - Set to "production"
-4. Deploy! Railway will automatically build and run your app
+## Technology Overview
 
-## 🔑 Default Credentials
+For the technically curious:
 
-- **Email**: admin@daamitha.art
-- **Password**: Admin@123
+| Component | Technology |
+|-----------|------------|
+| Backend | Node.js + Express |
+| Database | SQLite (upgradeable to PostgreSQL) |
+| Authentication | Better Auth (secure sessions) |
+| Email | Gmail API |
+| AI Chat | Claude (Anthropic) |
+| Frontend | Vanilla JavaScript (fast!) |
 
-⚠️ **Important**: Change these credentials in production!
+---
 
-## 📁 Project Structure
-
-```
-/daamitha-gallery
-  /server            # Backend API
-    /routes          # API endpoints
-    /middleware      # Auth middleware
-    /models          # Database models
-    app.js           # Express server
-  /public            # Frontend files
-    /css             # Stylesheets
-    /js              # Client-side JavaScript
-    index.html       # Main gallery page
-    pricelist.html   # Protected price list
-  /admin             # Admin dashboard
-    login.html       # Admin login
-    dashboard.html   # Admin panel
-  /uploads           # Uploaded artwork images
-  package.json       # Dependencies
-  .env               # Environment variables
-```
-
-## 🚀 Usage Guide
-
-### For Gallery Visitors
-1. Browse the gallery at the homepage
-2. Click the chatbot icon to ask questions
-3. Request price list access through contact form
-
-### For Admin
-1. Log in at `/admin/login.html`
-2. Manage artworks from the dashboard
-3. Edit site content dynamically
-4. View and export price lists
-5. Monitor gallery statistics
-
-## 🤖 Flowise Chatbot Setup
-
-To activate the chatbot:
-
-1. Install and run Flowise locally or use cloud instance
-2. Create a new chatflow with the provided system prompt
-3. Update the chatflow ID in `/public/index.html`:
-```javascript
-chatflowid: 'your-chatflow-id-here',
-apiHost: 'your-flowise-host'
-```
-
-### System Prompt for Chatbot
-The chatbot is configured to act as Daamitha's gallery assistant, knowledgeable about:
-- Artist's background and journey
-- Oil painting techniques
-- Available artworks
-- Commission process
-- Cultural heritage
-
-## 🔒 Security Features
-
-- Password hashing with bcrypt
-- JWT token authentication
-- Rate limiting on API endpoints
-- Input validation and sanitization
-- SQL injection prevention
-- Secure file upload validation
-
-## 📈 Future Enhancements
-
-- [ ] Customer accounts and wishlists
-- [ ] Exhibition management
-- [ ] Email notifications
-- [ ] Analytics dashboard
-- [ ] Multi-language support
-- [ ] Payment integration
-- [ ] AWS S3 for image storage
-- [ ] PostgreSQL for production
-# ChatKit Integration
+Made with love for showcasing beautiful art to the world.

@@ -8,6 +8,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const { initializeSchema, initializeAdminUser, initializeSiteContent } = require('./schema');
+const { initializeAdminUser: initializeBetterAuthAdmin } = require('../lib/auth');
 
 // Create database connection
 const dbPath = path.join(__dirname, '../../gallery.db');
@@ -21,6 +22,9 @@ const initializeDatabase = async () => {
 
     // Initialize admin user for legacy system
     await initializeAdminUser(db);
+
+    // Initialize admin user for Better Auth system
+    await initializeBetterAuthAdmin();
 
     // Initialize default site content
     initializeSiteContent(db);

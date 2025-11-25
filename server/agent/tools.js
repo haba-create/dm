@@ -2,11 +2,12 @@
  * Claude Agent Tools
  *
  * These tools give Claude the ability to take actions in the gallery system:
- * - Look up clients and their history
+ * - Look up and manage clients (CRM)
  * - Create and manage orders
- * - Send emails
+ * - Send emails and notifications via Gmail
  * - Create payment links
  * - Get artwork information
+ * - Schedule follow-ups and reminders
  */
 
 // Tool definitions following Anthropic's tool use schema
@@ -20,6 +21,99 @@ const GALLERY_TOOLS = [
         email: {
           type: "string",
           description: "The client's email address"
+        }
+      },
+      required: ["email"]
+    }
+  },
+  {
+    name: "update_client",
+    description: "Update a client's profile information including notes, tags, phone, address, and company. Use this to add notes about client preferences or after meaningful interactions.",
+    input_schema: {
+      type: "object",
+      properties: {
+        email: {
+          type: "string",
+          description: "The client's email address"
+        },
+        name: {
+          type: "string",
+          description: "Client's full name"
+        },
+        phone: {
+          type: "string",
+          description: "Client's phone number"
+        },
+        address: {
+          type: "string",
+          description: "Client's shipping address"
+        },
+        company: {
+          type: "string",
+          description: "Client's company or organization"
+        },
+        notes: {
+          type: "string",
+          description: "Notes about the client (preferences, special requirements, etc.)"
+        },
+        tags: {
+          type: "string",
+          description: "Comma-separated tags for categorizing the client (e.g., 'VIP,collector,commission')"
+        }
+      },
+      required: ["email"]
+    }
+  },
+  {
+    name: "search_clients",
+    description: "Search for clients by name, email, company, or tags. Use this to find clients matching certain criteria.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Search query (matches name, email, or company)"
+        },
+        tag: {
+          type: "string",
+          description: "Filter by tag"
+        },
+        limit: {
+          type: "integer",
+          description: "Maximum number of results (default 10)"
+        }
+      }
+    }
+  },
+  {
+    name: "create_contact",
+    description: "Create a new contact/lead in the CRM system when someone expresses interest but hasn't made an order yet. Use this to track potential clients.",
+    input_schema: {
+      type: "object",
+      properties: {
+        email: {
+          type: "string",
+          description: "Contact's email address"
+        },
+        name: {
+          type: "string",
+          description: "Contact's full name"
+        },
+        phone: {
+          type: "string",
+          description: "Contact's phone number (optional)"
+        },
+        source: {
+          type: "string",
+          description: "How they found the gallery (e.g., 'website chat', 'instagram', 'referral')"
+        },
+        notes: {
+          type: "string",
+          description: "Initial notes about the contact"
+        },
+        tags: {
+          type: "string",
+          description: "Initial tags (e.g., 'lead,interested-in-commissions')"
         }
       },
       required: ["email"]
@@ -230,6 +324,228 @@ const GALLERY_TOOLS = [
         }
       },
       required: ["context"]
+    }
+  },
+
+  // ============================================
+  // GMAIL NOTIFICATION TOOLS
+  // ============================================
+
+  {
+    name: "send_notification",
+    description: "Send a notification email to Daamitha (the gallery owner) about important events like new inquiries, orders, or urgent client matters. Use this to keep Daamitha informed.",
+    input_schema: {
+      type: "object",
+      properties: {
+        type: {
+          type: "string",
+          enum: ["new_inquiry", "new_order", "payment_received", "urgent", "follow_up_needed", "custom"],
+          description: "Type of notification"
+        },
+        subject: {
+          type: "string",
+          description: "Custom subject line (required for 'custom' type)"
+        },
+        summary: {
+          type: "string",
+          description: "Brief summary of what happened"
+        },
+        client_email: {
+          type: "string",
+          description: "Related client's email"
+        },
+        client_name: {
+          type: "string",
+          description: "Related client's name"
+        },
+        order_id: {
+          type: "string",
+          description: "Related order ID (if applicable)"
+        },
+        priority: {
+          type: "string",
+          enum: ["low", "normal", "high", "urgent"],
+          description: "Priority level (default: normal)"
+        }
+      },
+      required: ["type", "summary"]
+    }
+  },
+  {
+    name: "send_quote_email",
+    description: "Send a professional quote email to a client with artwork details and payment link. Use after discussing pricing with a client.",
+    input_schema: {
+      type: "object",
+      properties: {
+        to: {
+          type: "string",
+          description: "Client's email address"
+        },
+        client_name: {
+          type: "string",
+          description: "Client's name"
+        },
+        artwork_title: {
+          type: "string",
+          description: "Title of the artwork"
+        },
+        amount: {
+          type: "number",
+          description: "Quote amount in GBP"
+        },
+        description: {
+          type: "string",
+          description: "Additional details about the quote"
+        },
+        include_payment_link: {
+          type: "boolean",
+          description: "Whether to generate and include a payment link"
+        },
+        order_id: {
+          type: "string",
+          description: "Associated order ID"
+        }
+      },
+      required: ["to", "client_name", "artwork_title", "amount"]
+    }
+  },
+  {
+    name: "send_order_update",
+    description: "Send an order status update email to a client. Use when an order status changes (e.g., shipped, completed).",
+    input_schema: {
+      type: "object",
+      properties: {
+        to: {
+          type: "string",
+          description: "Client's email address"
+        },
+        client_name: {
+          type: "string",
+          description: "Client's name"
+        },
+        order_id: {
+          type: "string",
+          description: "Order ID"
+        },
+        new_status: {
+          type: "string",
+          enum: ["accepted", "paid", "in_progress", "shipped", "completed"],
+          description: "The new order status"
+        },
+        tracking_number: {
+          type: "string",
+          description: "Shipping tracking number (for shipped status)"
+        },
+        carrier: {
+          type: "string",
+          description: "Shipping carrier (e.g., Royal Mail, DHL)"
+        },
+        additional_message: {
+          type: "string",
+          description: "Additional personalized message"
+        }
+      },
+      required: ["to", "client_name", "order_id", "new_status"]
+    }
+  },
+  {
+    name: "send_follow_up",
+    description: "Send a follow-up email to a client. Use to check in on clients who haven't responded or to maintain relationships.",
+    input_schema: {
+      type: "object",
+      properties: {
+        to: {
+          type: "string",
+          description: "Client's email address"
+        },
+        client_name: {
+          type: "string",
+          description: "Client's name"
+        },
+        subject: {
+          type: "string",
+          description: "Email subject line"
+        },
+        message: {
+          type: "string",
+          description: "The follow-up message content"
+        },
+        context: {
+          type: "string",
+          description: "Context for the follow-up (e.g., 'quote sent 1 week ago', 'showed interest in commissions')"
+        }
+      },
+      required: ["to", "client_name", "message"]
+    }
+  },
+
+  // ============================================
+  // CRM ACTIVITY TOOLS
+  // ============================================
+
+  {
+    name: "log_activity",
+    description: "Log an activity or interaction with a client for CRM tracking. Use this to record calls, meetings, or important communications.",
+    input_schema: {
+      type: "object",
+      properties: {
+        client_email: {
+          type: "string",
+          description: "Client's email address"
+        },
+        activity_type: {
+          type: "string",
+          enum: ["call", "email", "meeting", "chat", "inquiry", "note"],
+          description: "Type of activity"
+        },
+        description: {
+          type: "string",
+          description: "Description of the activity"
+        },
+        outcome: {
+          type: "string",
+          description: "Result or outcome of the activity"
+        }
+      },
+      required: ["client_email", "activity_type", "description"]
+    }
+  },
+  {
+    name: "get_crm_summary",
+    description: "Get a summary of CRM data including recent orders, contacts needing follow-up, and key statistics. Use this to get an overview of the gallery's client activity.",
+    input_schema: {
+      type: "object",
+      properties: {
+        days: {
+          type: "integer",
+          description: "Number of days to look back (default 30)"
+        },
+        include_stats: {
+          type: "boolean",
+          description: "Include statistics (default true)"
+        }
+      }
+    }
+  },
+  {
+    name: "get_follow_up_list",
+    description: "Get a list of clients who need follow-up. Use this to identify clients who haven't been contacted recently or have pending inquiries.",
+    input_schema: {
+      type: "object",
+      properties: {
+        days_since_contact: {
+          type: "integer",
+          description: "Days since last contact (default 14)"
+        },
+        include_pending_orders: {
+          type: "boolean",
+          description: "Include clients with pending orders (default true)"
+        },
+        limit: {
+          type: "integer",
+          description: "Maximum number of results (default 10)"
+        }
+      }
     }
   }
 ];

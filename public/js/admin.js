@@ -1,5 +1,5 @@
 // Wait for DOM to be ready
-console.log('📊 Admin.js script loaded');
+console.log('Admin.js script loaded');
 document.addEventListener('DOMContentLoaded', initializeAdmin);
 
 // Global state for artworks management
@@ -9,30 +9,49 @@ let currentView = 'grid'; // 'grid' or 'table'
 let currentPage = 1;
 const itemsPerPage = 16;
 
+// Better Auth API base
+const AUTH_BASE = '/api/auth';
+
+// Helper function for authenticated API requests (uses cookies)
+async function authFetch(url, options = {}) {
+    return fetch(url, {
+        ...options,
+        credentials: 'include', // Include session cookies
+        headers: {
+            ...options.headers,
+            // Don't include Authorization header - use cookies instead
+        }
+    });
+}
+
 // Check authentication on load
 async function initializeAdmin() {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-        window.location.href = '/admin/login.html';
-        return;
-    }
-
     try {
-        const response = await fetch('/api/auth/verify', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+        // Check session using Better Auth
+        const response = await fetch(`${AUTH_BASE}/me`, {
+            credentials: 'include'
         });
 
-        if (!response.ok) {
-            throw new Error('Invalid token');
+        const data = await response.json();
+
+        if (!data.authenticated) {
+            throw new Error('Not authenticated');
         }
+
+        // Check for admin role
+        if (data.user.role !== 'admin') {
+            alert('Access denied. Admin privileges required.');
+            throw new Error('Not admin');
+        }
+
+        // Store user info for display
+        localStorage.setItem('user', JSON.stringify(data.user));
 
         // Load initial data
         loadDashboard();
         setupEventListeners();
     } catch (error) {
-        localStorage.removeItem('authToken');
+        console.error('Auth check failed:', error);
         localStorage.removeItem('user');
         window.location.href = '/admin/login.html';
     }
@@ -106,20 +125,25 @@ function setupEventListeners() {
         });
     }
 
-    // Logout Button
+    // Logout Button - Updated for Better Auth
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', function() {
+        logoutBtn.addEventListener('click', async function() {
             console.log('Logout button clicked');
             try {
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('token');
+                // Call Better Auth sign-out endpoint
+                await fetch(`${AUTH_BASE}/sign-out`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
                 localStorage.removeItem('user');
-                console.log('Auth tokens cleared, redirecting to login...');
+                console.log('Signed out, redirecting to login...');
                 window.location.href = '/admin/login.html';
             } catch (error) {
                 console.error('Error during logout:', error);
-                // Force redirect even if localStorage fails
+                // Force redirect even if sign-out fails
+                localStorage.removeItem('user');
                 window.location.href = '/admin/login.html';
             }
         });
@@ -383,15 +407,8 @@ function showOptimizationInfo(processing) {
 
 // Load Dashboard
 async function loadDashboard() {
-    const token = localStorage.getItem('authToken');
-
     try {
-        const response = await fetch('/api/artworks', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
+        const response = await authFetch('/api/artworks');
         const artworks = await response.json();
 
         // Update stats
@@ -428,15 +445,8 @@ async function loadDashboard() {
 
 // Load Artworks
 async function loadArtworks() {
-    const token = localStorage.getItem('authToken');
-
     try {
-        const response = await fetch('/api/artworks', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
+        const response = await authFetch('/api/artworks');
         allArtworks = await response.json();
         filteredArtworks = [...allArtworks];
 
@@ -494,7 +504,7 @@ function renderGridView() {
     } else {
         gridContainer.innerHTML = paginatedArtworks.map(artwork => `
             <div class="artwork-management-card ${artwork.featured ? 'featured-artwork' : ''}">
-                ${artwork.featured ? '<span class="featured-badge">⭐ Featured on Homepage</span>' : ''}
+                ${artwork.featured ? '<span class="featured-badge">Featured on Homepage</span>' : ''}
                 <img src="${artwork.image_path}" alt="${artwork.title}" class="card-image" data-action="open-lightbox" data-image="${artwork.image_path}">
                 <div class="card-body">
                     <h3 class="card-title">${artwork.title}</h3>
@@ -518,7 +528,7 @@ function renderGridView() {
                                 data-id="${artwork.id}"
                                 data-featured="${artwork.featured ? '1' : '0'}"
                                 title="${artwork.featured ? 'Remove from homepage' : 'Add to homepage'}">
-                            ${artwork.featured ? '★ Featured' : '☆ Feature'}
+                            ${artwork.featured ? 'Featured' : 'Feature'}
                         </button>
                         <button class="btn btn-icon" data-action="edit-artwork" data-id="${artwork.id}">Edit</button>
                         <button class="btn btn-danger btn-icon" data-action="delete-artwork" data-id="${artwork.id}">Delete</button>
@@ -554,7 +564,7 @@ function renderTableView() {
                 <td>${artwork.artist}</td>
                 <td>${artwork.year || '-'}</td>
                 <td>£${artwork.price || 0}</td>
-                <td>${artwork.available ? '✓' : '✗'}</td>
+                <td>${artwork.available ? 'Y' : 'N'}</td>
                 <td>
                     <button class="btn" data-action="edit-artwork" data-id="${artwork.id}" style="margin-right: 0.5rem;">Edit</button>
                     <button class="btn btn-danger" data-action="delete-artwork" data-id="${artwork.id}">Delete</button>
@@ -653,8 +663,6 @@ window.closeLightbox = function() {
 
 // Load Content
 async function loadContent() {
-    const token = localStorage.getItem('authToken');
-
     try {
         // Load hero content
         const heroResponse = await fetch('/api/content/hero');
@@ -682,15 +690,8 @@ async function loadContent() {
 
 // Load Price List
 async function loadPriceList() {
-    const token = localStorage.getItem('authToken');
-
     try {
-        const response = await fetch('/api/artworks/admin/pricelist', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
+        const response = await authFetch('/api/artworks/admin/pricelist');
         const artworks = await response.json();
         const tbody = document.getElementById('pricelist-table');
 
@@ -731,15 +732,8 @@ window.showAddArtwork = function() {
 
 // Edit Artwork (global for inline onclick handlers)
 window.editArtwork = async function(id) {
-    const token = localStorage.getItem('authToken');
-
     try {
-        const response = await fetch(`/api/artworks/${id}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
+        const response = await authFetch(`/api/artworks/${id}`);
         const artwork = await response.json();
 
         document.getElementById('modal-title').textContent = 'Edit Artwork';
@@ -780,14 +774,9 @@ window.deleteArtwork = async function(id) {
         return;
     }
 
-    const token = localStorage.getItem('authToken');
-
     try {
-        const response = await fetch(`/api/artworks/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+        const response = await authFetch(`/api/artworks/${id}`, {
+            method: 'DELETE'
         });
 
         if (!response.ok) {
@@ -806,13 +795,11 @@ window.deleteArtwork = async function(id) {
 // Toggle Featured Status (global for inline onclick handlers)
 window.toggleFeatured = async function(id, currentFeatured) {
     const newFeatured = !currentFeatured;
-    const token = localStorage.getItem('authToken');
 
     try {
-        const response = await fetch(`/api/artworks/${id}/featured`, {
+        const response = await authFetch(`/api/artworks/${id}/featured`, {
             method: 'PATCH',
             headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ featured: newFeatured })
@@ -882,7 +869,6 @@ window.previewImage = function(event) {
 async function handleArtworkSubmit(e) {
     e.preventDefault();
 
-    const token = localStorage.getItem('authToken');
     const form = e.target;
     const formData = new FormData(form);
 
@@ -957,17 +943,14 @@ async function handleArtworkSubmit(e) {
             });
 
             xhr.open(method, url);
-            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+            xhr.withCredentials = true; // Include cookies for session auth
             xhr.send(formData);
         });
     } else {
         // No image, use regular fetch
         try {
-            const response = await fetch(url, {
+            const response = await authFetch(url, {
                 method: method,
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
                 body: formData
             });
 
@@ -990,7 +973,6 @@ async function handleArtworkSubmit(e) {
 async function handleHeroSubmit(e) {
     e.preventDefault();
 
-    const token = localStorage.getItem('authToken');
     const content = {
         title: document.getElementById('hero-title').value,
         subtitle: document.getElementById('hero-subtitle').value,
@@ -998,10 +980,9 @@ async function handleHeroSubmit(e) {
     };
 
     try {
-        const response = await fetch('/api/content/hero', {
+        const response = await authFetch('/api/content/hero', {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ content })
@@ -1022,7 +1003,6 @@ async function handleHeroSubmit(e) {
 async function handleAboutSubmit(e) {
     e.preventDefault();
 
-    const token = localStorage.getItem('authToken');
     const paragraphs = document.getElementById('about-content').value.split('\n\n').filter(p => p.trim());
     const content = {
         title: document.getElementById('about-title').value,
@@ -1030,10 +1010,9 @@ async function handleAboutSubmit(e) {
     };
 
     try {
-        const response = await fetch('/api/content/about', {
+        const response = await authFetch('/api/content/about', {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ content })

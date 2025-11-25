@@ -8,6 +8,12 @@
 const db = require('../models/database');
 const emailService = require('../services/email');
 const paymentService = require('../services/polar');
+const Database = require('better-sqlite3');
+const path = require('path');
+
+// Database path for direct queries
+const dbPath = path.join(__dirname, '../../gallery.db');
+const getDb = () => new Database(dbPath);
 
 /**
  * Execute a tool by name with given input
@@ -17,35 +23,57 @@ async function executeTool(toolName, input) {
 
   try {
     switch (toolName) {
+      // Client Management
       case 'lookup_client':
         return await lookupClient(input);
+      case 'update_client':
+        return await updateClient(input);
+      case 'search_clients':
+        return await searchClients(input);
+      case 'create_contact':
+        return await createContact(input);
 
+      // Artworks
       case 'get_artwork_details':
         return await getArtworkDetails(input);
-
       case 'list_available_artworks':
         return await listAvailableArtworks(input);
 
+      // Orders
       case 'create_order':
         return await createOrder(input);
-
       case 'update_order_status':
         return await updateOrderStatus(input);
-
       case 'get_client_orders':
         return await getClientOrders(input);
 
+      // Email & Notifications
       case 'send_email':
         return await sendEmail(input);
+      case 'send_notification':
+        return await sendNotification(input);
+      case 'send_quote_email':
+        return await sendQuoteEmail(input);
+      case 'send_order_update':
+        return await sendOrderUpdate(input);
+      case 'send_follow_up':
+        return await sendFollowUp(input);
 
+      // Payments
       case 'create_payment_link':
         return await createPaymentLink(input);
-
       case 'check_payment_status':
         return await checkPaymentStatus(input);
 
+      // CRM Activities
       case 'save_conversation_context':
         return await saveConversationContext(input);
+      case 'log_activity':
+        return await logActivity(input);
+      case 'get_crm_summary':
+        return await getCrmSummary(input);
+      case 'get_follow_up_list':
+        return await getFollowUpList(input);
 
       default:
         return { error: `Unknown tool: ${toolName}` };
@@ -476,6 +504,565 @@ async function saveConversationContext({ client_email, context, summary }) {
     };
   } catch (error) {
     return { error: `Failed to save context: ${error.message}` };
+  }
+}
+
+// ============================================
+// NEW CRM TOOLS
+// ============================================
+
+/**
+ * Update client profile
+ */
+async function updateClient({ email, name, phone, address, company, notes, tags }) {
+  try {
+    const db = getDb();
+
+    // Check if client exists
+    const user = db.prepare('SELECT * FROM user WHERE email = ?').get(email);
+
+    if (!user) {
+      db.close();
+      return {
+        success: false,
+        error: `No client found with email: ${email}`,
+        suggestion: "Use create_contact to add a new contact first."
+      };
+    }
+
+    // Build update query dynamically
+    const updates = [];
+    const params = [];
+
+    if (name) { updates.push('name = ?'); params.push(name); }
+    if (phone) { updates.push('phone = ?'); params.push(phone); }
+    if (address) { updates.push('address = ?'); params.push(address); }
+    if (company) { updates.push('company = ?'); params.push(company); }
+    if (notes) { updates.push('notes = ?'); params.push(notes); }
+    if (tags) { updates.push('tags = ?'); params.push(tags); }
+
+    if (updates.length === 0) {
+      db.close();
+      return { success: false, error: 'No fields to update' };
+    }
+
+    updates.push('updatedAt = datetime("now")');
+    params.push(email);
+
+    db.prepare(`UPDATE user SET ${updates.join(', ')} WHERE email = ?`).run(...params);
+
+    // Update last contacted time
+    db.prepare('UPDATE user SET lastContactedAt = datetime("now") WHERE email = ?').run(email);
+
+    const updated = db.prepare('SELECT * FROM user WHERE email = ?').get(email);
+    db.close();
+
+    return {
+      success: true,
+      client: {
+        id: updated.id,
+        name: updated.name,
+        email: updated.email,
+        phone: updated.phone,
+        address: updated.address,
+        company: updated.company,
+        notes: updated.notes,
+        tags: updated.tags
+      },
+      message: 'Client profile updated successfully'
+    };
+  } catch (error) {
+    return { error: `Failed to update client: ${error.message}` };
+  }
+}
+
+/**
+ * Search clients
+ */
+async function searchClients({ query, tag, limit = 10 }) {
+  try {
+    const db = getDb();
+
+    let sql = `
+      SELECT u.*,
+             COUNT(DISTINCT o.id) as total_orders,
+             SUM(CASE WHEN o.status = 'completed' THEN o.amount ELSE 0 END) as total_spent
+      FROM user u
+      LEFT JOIN orders o ON u.email = o.client_email
+      WHERE u.role = 'client'
+    `;
+    const params = [];
+
+    if (query) {
+      sql += ` AND (u.name LIKE ? OR u.email LIKE ? OR u.company LIKE ?)`;
+      params.push(`%${query}%`, `%${query}%`, `%${query}%`);
+    }
+
+    if (tag) {
+      sql += ` AND u.tags LIKE ?`;
+      params.push(`%${tag}%`);
+    }
+
+    sql += ` GROUP BY u.id ORDER BY u.lastContactedAt DESC LIMIT ?`;
+    params.push(limit);
+
+    const clients = db.prepare(sql).all(...params);
+    db.close();
+
+    return {
+      success: true,
+      clients: clients.map(c => ({
+        id: c.id,
+        name: c.name,
+        email: c.email,
+        phone: c.phone,
+        company: c.company,
+        tags: c.tags,
+        totalOrders: c.total_orders || 0,
+        totalSpent: c.total_spent || 0,
+        totalSpentFormatted: `£${(c.total_spent || 0).toLocaleString()}`,
+        lastContacted: c.lastContactedAt,
+        memberSince: c.createdAt
+      })),
+      count: clients.length,
+      filters: { query, tag, limit }
+    };
+  } catch (error) {
+    return { error: `Failed to search clients: ${error.message}` };
+  }
+}
+
+/**
+ * Create a new contact/lead
+ */
+async function createContact({ email, name, phone, source, notes, tags }) {
+  try {
+    const db = getDb();
+
+    // Check if already exists
+    const existing = db.prepare('SELECT * FROM user WHERE email = ?').get(email);
+
+    if (existing) {
+      db.close();
+      return {
+        success: false,
+        exists: true,
+        client: {
+          id: existing.id,
+          name: existing.name,
+          email: existing.email
+        },
+        message: 'A contact with this email already exists'
+      };
+    }
+
+    // Create new contact
+    const userId = 'contact_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    const fullNotes = source ? `Source: ${source}\n${notes || ''}` : notes || '';
+
+    db.prepare(`
+      INSERT INTO user (id, name, email, role, phone, notes, tags, createdAt, updatedAt)
+      VALUES (?, ?, ?, 'client', ?, ?, ?, datetime('now'), datetime('now'))
+    `).run(userId, name || email.split('@')[0], email, phone || null, fullNotes, tags || 'lead');
+
+    const newContact = db.prepare('SELECT * FROM user WHERE id = ?').get(userId);
+    db.close();
+
+    return {
+      success: true,
+      contact: {
+        id: newContact.id,
+        name: newContact.name,
+        email: newContact.email,
+        phone: newContact.phone,
+        tags: newContact.tags,
+        notes: newContact.notes
+      },
+      message: `Contact ${newContact.name} created successfully`
+    };
+  } catch (error) {
+    return { error: `Failed to create contact: ${error.message}` };
+  }
+}
+
+// ============================================
+// NOTIFICATION TOOLS
+// ============================================
+
+/**
+ * Send notification to gallery owner
+ */
+async function sendNotification({ type, subject, summary, client_email, client_name, order_id, priority = 'normal' }) {
+  try {
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@daamitha.art';
+
+    // Build subject based on type
+    const subjects = {
+      'new_inquiry': `New Inquiry${client_name ? ` from ${client_name}` : ''}`,
+      'new_order': `New Order${order_id ? ` #${order_id}` : ''}`,
+      'payment_received': `Payment Received${order_id ? ` for Order #${order_id}` : ''}`,
+      'urgent': `[URGENT] ${subject || 'Requires Attention'}`,
+      'follow_up_needed': `Follow-up Needed${client_name ? ` - ${client_name}` : ''}`,
+      'custom': subject || 'Gallery Notification'
+    };
+
+    const priorityPrefix = priority === 'urgent' ? '[URGENT] ' : (priority === 'high' ? '[High Priority] ' : '');
+    const emailSubject = priorityPrefix + (subjects[type] || subject || 'Gallery Notification');
+
+    // Build email body
+    let body = `${summary}\n\n`;
+    if (client_name) body += `Client: ${client_name}\n`;
+    if (client_email) body += `Email: ${client_email}\n`;
+    if (order_id) body += `Order ID: ${order_id}\n`;
+    body += `\nTime: ${new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })}`;
+
+    const result = await emailService.sendEmail({
+      to: adminEmail,
+      subject: emailSubject,
+      body,
+      template: 'custom'
+    });
+
+    return {
+      success: true,
+      notificationType: type,
+      sentTo: adminEmail,
+      message: 'Notification sent to gallery owner'
+    };
+  } catch (error) {
+    return { error: `Failed to send notification: ${error.message}` };
+  }
+}
+
+/**
+ * Send professional quote email
+ */
+async function sendQuoteEmail({ to, client_name, artwork_title, amount, description, include_payment_link, order_id }) {
+  try {
+    let paymentLink = null;
+
+    // Create payment link if requested
+    if (include_payment_link && order_id) {
+      const paymentResult = await paymentService.createCheckout({
+        orderId: order_id,
+        amount,
+        description: `Quote for ${artwork_title}`,
+        clientEmail: to
+      });
+
+      if (paymentResult.success) {
+        paymentLink = paymentResult.checkoutUrl;
+      }
+    }
+
+    const result = await emailService.sendQuoteEmail({
+      to,
+      clientName: client_name,
+      artworkTitle: artwork_title,
+      amount,
+      paymentLink,
+      additionalNotes: description
+    });
+
+    // Log the email
+    const db = getDb();
+    const emailId = 'email_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    db.prepare(`
+      INSERT INTO email_log (id, order_id, recipient, subject, template, status, sent_at)
+      VALUES (?, ?, ?, ?, 'quote', 'sent', datetime('now'))
+    `).run(emailId, order_id || null, to, `Quote for ${artwork_title} - Daamitha Gallery`);
+
+    // Update contact's last contacted time
+    db.prepare('UPDATE user SET lastContactedAt = datetime("now") WHERE email = ?').run(to);
+    db.close();
+
+    return {
+      success: true,
+      emailSent: true,
+      paymentLinkIncluded: !!paymentLink,
+      message: `Quote email sent to ${client_name}`
+    };
+  } catch (error) {
+    return { error: `Failed to send quote email: ${error.message}` };
+  }
+}
+
+/**
+ * Send order status update email
+ */
+async function sendOrderUpdate({ to, client_name, order_id, new_status, tracking_number, carrier, additional_message }) {
+  try {
+    const statusMessages = {
+      'accepted': 'Your order has been accepted! We will begin working on it shortly.',
+      'paid': 'Thank you! Your payment has been received and confirmed.',
+      'in_progress': 'Great news! Work on your order is now in progress.',
+      'shipped': `Your order has been shipped!${tracking_number ? `\n\nTracking Number: ${tracking_number}` : ''}${carrier ? `\nCarrier: ${carrier}` : ''}`,
+      'completed': 'Your order has been delivered. Thank you for your purchase!'
+    };
+
+    const subject = new_status === 'shipped'
+      ? `Your Artwork Has Been Shipped! - Order ${order_id}`
+      : `Order Update - ${order_id} - Daamitha Gallery`;
+
+    let body = `Dear ${client_name},\n\n${statusMessages[new_status] || `Your order status has been updated to: ${new_status}`}`;
+    if (additional_message) body += `\n\n${additional_message}`;
+    body += `\n\nOrder ID: ${order_id}\n\nWarm regards,\nDaamitha`;
+
+    const result = await emailService.sendEmail({
+      to,
+      subject,
+      body,
+      template: new_status === 'shipped' ? 'shipping' : 'order_confirmation'
+    });
+
+    // Log the email
+    const db = getDb();
+    const emailId = 'email_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    db.prepare(`
+      INSERT INTO email_log (id, order_id, recipient, subject, template, status, sent_at)
+      VALUES (?, ?, ?, ?, ?, 'sent', datetime('now'))
+    `).run(emailId, order_id, to, subject, new_status === 'shipped' ? 'shipping' : 'order_update');
+
+    // Update contact's last contacted time
+    db.prepare('UPDATE user SET lastContactedAt = datetime("now") WHERE email = ?').run(to);
+    db.close();
+
+    return {
+      success: true,
+      message: `Order update email sent for status: ${new_status}`
+    };
+  } catch (error) {
+    return { error: `Failed to send order update: ${error.message}` };
+  }
+}
+
+/**
+ * Send follow-up email
+ */
+async function sendFollowUp({ to, client_name, subject, message, context }) {
+  try {
+    const emailSubject = subject || `Following Up - Daamitha Gallery`;
+
+    let body = `Dear ${client_name},\n\n${message}`;
+    body += `\n\nWarm regards,\nDaamitha`;
+
+    const result = await emailService.sendEmail({
+      to,
+      subject: emailSubject,
+      body,
+      template: 'follow_up'
+    });
+
+    // Log the email
+    const db = getDb();
+    const emailId = 'email_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    db.prepare(`
+      INSERT INTO email_log (id, recipient, subject, template, status, sent_at)
+      VALUES (?, ?, ?, 'follow_up', 'sent', datetime('now'))
+    `).run(emailId, to, emailSubject);
+
+    // Update contact's last contacted time
+    db.prepare('UPDATE user SET lastContactedAt = datetime("now") WHERE email = ?').run(to);
+    db.close();
+
+    return {
+      success: true,
+      message: `Follow-up email sent to ${client_name}`,
+      context: context
+    };
+  } catch (error) {
+    return { error: `Failed to send follow-up: ${error.message}` };
+  }
+}
+
+// ============================================
+// CRM ACTIVITY TOOLS
+// ============================================
+
+/**
+ * Log an activity for CRM tracking
+ */
+async function logActivity({ client_email, activity_type, description, outcome }) {
+  try {
+    const db = getDb();
+
+    // Create activity log table if not exists
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS activity_log (
+        id TEXT PRIMARY KEY,
+        client_email TEXT,
+        activity_type TEXT,
+        description TEXT,
+        outcome TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )
+    `).run();
+
+    const activityId = 'activity_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+
+    db.prepare(`
+      INSERT INTO activity_log (id, client_email, activity_type, description, outcome)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(activityId, client_email, activity_type, description, outcome || null);
+
+    // Update last contacted time for the client
+    db.prepare('UPDATE user SET lastContactedAt = datetime("now") WHERE email = ?').run(client_email);
+
+    db.close();
+
+    return {
+      success: true,
+      activityId,
+      message: `Activity logged: ${activity_type} with ${client_email}`
+    };
+  } catch (error) {
+    return { error: `Failed to log activity: ${error.message}` };
+  }
+}
+
+/**
+ * Get CRM summary
+ */
+async function getCrmSummary({ days = 30, include_stats = true }) {
+  try {
+    const db = getDb();
+
+    const result = {};
+
+    if (include_stats) {
+      // Total contacts
+      result.totalContacts = db.prepare('SELECT COUNT(*) as count FROM user WHERE role = ?').get('client').count;
+
+      // New contacts in period
+      result.newContacts = db.prepare(`
+        SELECT COUNT(*) as count FROM user
+        WHERE role = 'client' AND createdAt > datetime('now', '-${days} days')
+      `).get().count;
+
+      // Order stats
+      const orderStats = db.prepare(`
+        SELECT
+          COUNT(*) as total_orders,
+          SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+          SUM(CASE WHEN status IN ('inquiry', 'quoted') THEN 1 ELSE 0 END) as pending,
+          SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) as revenue
+        FROM orders
+        WHERE created_at > datetime('now', '-${days} days')
+      `).get();
+
+      result.orders = {
+        total: orderStats.total_orders || 0,
+        completed: orderStats.completed || 0,
+        pending: orderStats.pending || 0,
+        revenue: orderStats.revenue || 0,
+        revenueFormatted: `£${(orderStats.revenue || 0).toLocaleString()}`
+      };
+
+      // Clients needing follow-up
+      result.needsFollowUp = db.prepare(`
+        SELECT COUNT(*) as count FROM user
+        WHERE role = 'client'
+        AND (lastContactedAt IS NULL OR lastContactedAt < datetime('now', '-14 days'))
+      `).get().count;
+    }
+
+    // Recent orders
+    result.recentOrders = db.prepare(`
+      SELECT o.*, a.title as artwork_title
+      FROM orders o
+      LEFT JOIN artworks a ON o.artwork_id = a.id
+      ORDER BY o.created_at DESC LIMIT 5
+    `).all();
+
+    // Recent activity
+    const activityExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='activity_log'").get();
+    if (activityExists) {
+      result.recentActivity = db.prepare(`
+        SELECT * FROM activity_log ORDER BY created_at DESC LIMIT 5
+      `).all();
+    }
+
+    db.close();
+
+    return {
+      success: true,
+      period: `Last ${days} days`,
+      ...result
+    };
+  } catch (error) {
+    return { error: `Failed to get CRM summary: ${error.message}` };
+  }
+}
+
+/**
+ * Get list of clients needing follow-up
+ */
+async function getFollowUpList({ days_since_contact = 14, include_pending_orders = true, limit = 10 }) {
+  try {
+    const db = getDb();
+
+    const clients = [];
+
+    // Clients not contacted recently
+    const notContacted = db.prepare(`
+      SELECT u.*,
+             (SELECT COUNT(*) FROM orders WHERE client_email = u.email) as order_count,
+             (SELECT MAX(created_at) FROM orders WHERE client_email = u.email) as last_order
+      FROM user u
+      WHERE u.role = 'client'
+      AND (u.lastContactedAt IS NULL OR u.lastContactedAt < datetime('now', '-${days_since_contact} days'))
+      ORDER BY u.lastContactedAt ASC
+      LIMIT ?
+    `).all(limit);
+
+    clients.push(...notContacted.map(c => ({
+      ...c,
+      reason: c.lastContactedAt ? `Not contacted in ${days_since_contact}+ days` : 'Never contacted',
+      priority: c.order_count > 0 ? 'high' : 'normal'
+    })));
+
+    // Clients with pending orders
+    if (include_pending_orders) {
+      const pendingOrders = db.prepare(`
+        SELECT DISTINCT u.*, o.id as order_id, o.status, o.title as order_title, o.created_at as order_created
+        FROM user u
+        JOIN orders o ON u.email = o.client_email
+        WHERE u.role = 'client'
+        AND o.status IN ('inquiry', 'quoted')
+        ORDER BY o.created_at ASC
+        LIMIT ?
+      `).all(limit);
+
+      pendingOrders.forEach(c => {
+        if (!clients.find(existing => existing.email === c.email)) {
+          clients.push({
+            ...c,
+            reason: `Pending order (${c.status}): ${c.order_title || c.order_id}`,
+            priority: 'high'
+          });
+        }
+      });
+    }
+
+    db.close();
+
+    return {
+      success: true,
+      clients: clients.slice(0, limit).map(c => ({
+        id: c.id,
+        name: c.name,
+        email: c.email,
+        phone: c.phone,
+        lastContacted: c.lastContactedAt,
+        orderCount: c.order_count || 0,
+        reason: c.reason,
+        priority: c.priority
+      })),
+      count: Math.min(clients.length, limit),
+      criteria: { days_since_contact, include_pending_orders }
+    };
+  } catch (error) {
+    return { error: `Failed to get follow-up list: ${error.message}` };
   }
 }
 

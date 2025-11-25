@@ -1,71 +1,106 @@
+/**
+ * Unified Authentication Routes
+ *
+ * Uses Better Auth for all users (both admin and client)
+ * Endpoints:
+ *   POST /api/auth/sign-up/email - Email registration
+ *   POST /api/auth/sign-in/email - Email login
+ *   POST /api/auth/sign-out - Logout
+ *   GET /api/auth/session - Get current session
+ *   POST /api/auth/forgot-password - Request password reset
+ *   POST /api/auth/reset-password - Reset password with token
+ */
+
 const express = require('express');
+const { auth, initializeAdminUser } = require('../lib/auth');
+const { toNodeHandler, fromNodeHeaders } = require('better-auth/node');
+
 const router = express.Router();
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const db = require('../models/database');
 
-// Login route
-router.post('/login', (req, res) => {
-    const { email, password } = req.body;
+// Initialize admin user on first load
+initializeAdminUser().catch(console.error);
 
-    if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required' });
-    }
+// Create the Better Auth handler
+const authHandler = toNodeHandler(auth);
 
-    db.get(
-        "SELECT * FROM users WHERE email = ?",
-        [email],
-        async (err, user) => {
-            if (err) {
-                return res.status(500).json({ error: 'Database error' });
-            }
-
-            if (!user) {
-                return res.status(401).json({ error: 'Invalid credentials' });
-            }
-
-            const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-
-            if (!isPasswordValid) {
-                return res.status(401).json({ error: 'Invalid credentials' });
-            }
-
-            const jwtSecret = process.env.JWT_SECRET || 'default_dev_secret_change_in_production';
-
-            const token = jwt.sign(
-                { id: user.id, email: user.email, role: user.role },
-                jwtSecret,
-                { expiresIn: '24h' }
-            );
-
-            res.json({
-                token,
-                user: {
-                    id: user.id,
-                    email: user.email,
-                    role: user.role
-                }
-            });
-        }
-    );
+// Health check endpoint
+router.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    authSystem: 'Better Auth',
+    timestamp: new Date().toISOString()
+  });
 });
 
-// Verify token route
-router.get('/verify', (req, res) => {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+// Custom session check endpoint with role info
+router.get('/me', async (req, res) => {
+  try {
+    const session = await auth.api.getSession({
+      headers: fromNodeHeaders(req.headers)
+    });
 
-    if (!token) {
-        return res.status(401).json({ error: 'No token provided' });
+    if (!session || !session.user) {
+      return res.status(401).json({ authenticated: false });
     }
 
-    const jwtSecret = process.env.JWT_SECRET || 'default_dev_secret_change_in_production';
+    res.json({
+      authenticated: true,
+      user: {
+        id: session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+        role: session.user.role || 'client',
+        image: session.user.image,
+        phone: session.user.phone,
+        address: session.user.address
+      },
+      session: {
+        id: session.session.id,
+        expiresAt: session.session.expiresAt
+      }
+    });
+  } catch (error) {
+    console.error('Session check error:', error);
+    res.status(500).json({ error: 'Failed to check session' });
+  }
+});
 
-    try {
-        const decoded = jwt.verify(token, jwtSecret);
-        res.json({ valid: true, user: decoded });
-    } catch (error) {
-        res.status(401).json({ valid: false, error: 'Invalid token' });
+// Verify endpoint for backward compatibility with admin dashboard
+router.get('/verify', async (req, res) => {
+  try {
+    const session = await auth.api.getSession({
+      headers: fromNodeHeaders(req.headers)
+    });
+
+    if (!session || !session.user) {
+      return res.status(401).json({ valid: false, error: 'No session' });
     }
+
+    res.json({
+      valid: true,
+      user: {
+        id: session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+        role: session.user.role || 'client'
+      }
+    });
+  } catch (error) {
+    res.status(401).json({ valid: false, error: 'Invalid session' });
+  }
+});
+
+// Handle all other requests with Better Auth handler
+// This catches all Better Auth endpoints like:
+// - POST /sign-up/email
+// - POST /sign-in/email
+// - POST /sign-out
+// - GET /session
+// - POST /forgot-password
+// - POST /reset-password
+// - OAuth callback routes
+router.all('/*', (req, res, next) => {
+  authHandler(req, res).catch(next);
 });
 
 module.exports = router;

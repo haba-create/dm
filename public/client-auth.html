@@ -582,16 +582,16 @@
             window.location.href = '/?openChat=true';
         });
 
-        // Check session
+        // Check session - use /me endpoint to get role info
         async function checkSession() {
             try {
-                const response = await fetch(`${API_BASE}/session`, {
+                const response = await fetch(`${API_BASE}/me`, {
                     credentials: 'include'
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.session && data.user) {
+                    if (data.authenticated && data.user) {
                         currentUser = data.user;
                         showDashboard(data.user);
                         return;

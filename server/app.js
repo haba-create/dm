@@ -77,6 +77,7 @@ const contentRoutes = require('./routes/content');
 const chatkitRoutes = require('./routes/chatkit');
 const agentRoutes = require('./routes/agent');
 const crmRoutes = require('./routes/crm');
+const settingsRoutes = require('./routes/settings');
 
 // API routes
 app.use('/api/auth', authRoutes);                    // Unified auth (Better Auth) for all users
@@ -85,6 +86,7 @@ app.use('/api/content', contentRoutes);
 app.use('/api/chatkit', chatkitRoutes);
 app.use('/api/agent', agentRoutes);
 app.use('/api/crm', crmRoutes);                      // CRM management routes
+app.use('/api/settings', settingsRoutes);            // Admin settings routes
 
 // Serve main index.html for root route
 app.get('/', (req, res) => {

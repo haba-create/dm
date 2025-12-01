@@ -608,6 +608,12 @@
 
         // Show dashboard
         function showDashboard(user) {
+            // Redirect admins to admin dashboard
+            if (user.role === 'admin') {
+                window.location.href = '/admin/dashboard.html';
+                return;
+            }
+
             authTabs.style.display = 'none';
             loginForm.classList.remove('active');
             registerForm.classList.remove('active');

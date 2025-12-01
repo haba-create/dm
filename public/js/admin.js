@@ -60,8 +60,8 @@ async function initializeAdmin() {
 // Setup all event listeners
 function setupEventListeners() {
 
-    // Navigation
-    document.querySelectorAll('.nav-menu a').forEach(link => {
+    // Navigation - only handle links with data-page attribute
+    document.querySelectorAll('.nav-menu a[data-page]').forEach(link => {
     link.addEventListener('click', (e) => {
         e.preventDefault();
         const page = link.dataset.page;

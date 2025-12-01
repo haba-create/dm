@@ -129,6 +129,26 @@
             transform: translateY(-2px);
         }
 
+        .nav-login-btn {
+            background: linear-gradient(45deg, var(--gold-leaf), var(--marigold)) !important;
+            color: var(--charcoal) !important;
+            padding: 8px 20px !important;
+            border-radius: 25px !important;
+            font-weight: 600 !important;
+        }
+
+        .nav-login-btn:hover {
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4) !important;
+        }
+
+        .mobile-login-btn {
+            background: linear-gradient(45deg, var(--gold-leaf), var(--marigold)) !important;
+            color: var(--charcoal) !important;
+            border-radius: 25px !important;
+            font-weight: 600 !important;
+            text-align: center !important;
+        }
+
         /* Hero Section */
         .hero {
             min-height: 100vh;
@@ -904,7 +924,7 @@
                 <li><a href="#heritage">Heritage</a></li>
                 <li><a href="#contact">Acquire</a></li>
                 <li><a href="/pricelist">Price List</a></li>
-                <li><a href="/admin/login.html" style="opacity: 0.7;">Admin</a></li>
+                <li><a href="/login" class="nav-login-btn">Login</a></li>
             </ul>
 
             <!-- Mobile Menu Toggle -->
@@ -927,7 +947,7 @@
             <li><a href="#heritage">🎵 Heritage</a></li>
             <li><a href="#contact">💌 Acquire</a></li>
             <li><a href="/pricelist">💰 Price List</a></li>
-            <li><a href="/admin/login.html" style="opacity: 0.7;">🔐 Admin</a></li>
+            <li><a href="/login" class="mobile-login-btn">👤 Login / Sign Up</a></li>
         </ul>
     </nav>
 

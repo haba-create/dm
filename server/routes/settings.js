@@ -323,6 +323,229 @@ router.get('/gmail/callback', async (req, res) => {
   }
 });
 
+// ============================================
+// USER MANAGEMENT ENDPOINTS
+// ============================================
+
+/**
+ * GET /api/settings/users
+ * List all users with pagination
+ */
+router.get('/users', requireAdmin, async (req, res) => {
+  const db = require('../models/database').getDb();
+  const { page = 1, limit = 20, search = '', role = '' } = req.query;
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+
+  try {
+    let whereClause = '1=1';
+    const params = [];
+
+    if (search) {
+      whereClause += ' AND (name LIKE ? OR email LIKE ? OR company LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
+    if (role) {
+      whereClause += ' AND role = ?';
+      params.push(role);
+    }
+
+    // Get total count
+    const countResult = await new Promise((resolve, reject) => {
+      db.get(`SELECT COUNT(*) as count FROM user WHERE ${whereClause}`, params, (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+
+    // Get users with pagination
+    const users = await new Promise((resolve, reject) => {
+      db.all(
+        `SELECT id, name, email, role, phone, company, image, createdAt, updatedAt, lastContactedAt
+         FROM user WHERE ${whereClause}
+         ORDER BY createdAt DESC
+         LIMIT ? OFFSET ?`,
+        [...params, parseInt(limit), offset],
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows || []);
+        }
+      );
+    });
+
+    res.json({
+      users,
+      pagination: {
+        total: countResult.count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(countResult.count / parseInt(limit))
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+/**
+ * GET /api/settings/users/:id
+ * Get single user details
+ */
+router.get('/users/:id', requireAdmin, async (req, res) => {
+  const db = require('../models/database').getDb();
+  const { id } = req.params;
+
+  try {
+    const user = await new Promise((resolve, reject) => {
+      db.get(
+        `SELECT id, name, email, role, phone, address, company, notes, tags, image, createdAt, updatedAt, lastContactedAt
+         FROM user WHERE id = ?`,
+        [id],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user);
+
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
+});
+
+/**
+ * PUT /api/settings/users/:id
+ * Update user details (role, notes, etc.)
+ */
+router.put('/users/:id', requireAdmin, async (req, res) => {
+  const db = require('../models/database').getDb();
+  const { id } = req.params;
+  const { name, role, phone, address, company, notes, tags } = req.body;
+
+  // Prevent demoting yourself
+  if (id === req.user.id && role && role !== 'admin') {
+    return res.status(400).json({ error: 'Cannot change your own admin role' });
+  }
+
+  try {
+    const updates = [];
+    const params = [];
+
+    if (name !== undefined) { updates.push('name = ?'); params.push(name); }
+    if (role !== undefined) { updates.push('role = ?'); params.push(role); }
+    if (phone !== undefined) { updates.push('phone = ?'); params.push(phone); }
+    if (address !== undefined) { updates.push('address = ?'); params.push(address); }
+    if (company !== undefined) { updates.push('company = ?'); params.push(company); }
+    if (notes !== undefined) { updates.push('notes = ?'); params.push(notes); }
+    if (tags !== undefined) { updates.push('tags = ?'); params.push(JSON.stringify(tags)); }
+
+    updates.push('updatedAt = CURRENT_TIMESTAMP');
+    params.push(id);
+
+    await new Promise((resolve, reject) => {
+      db.run(
+        `UPDATE user SET ${updates.join(', ')} WHERE id = ?`,
+        params,
+        function(err) {
+          if (err) reject(err);
+          else resolve(this.changes);
+        }
+      );
+    });
+
+    res.json({ success: true, message: 'User updated successfully' });
+
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+/**
+ * DELETE /api/settings/users/:id
+ * Delete a user
+ */
+router.delete('/users/:id', requireAdmin, async (req, res) => {
+  const db = require('../models/database').getDb();
+  const { id } = req.params;
+
+  // Prevent self-deletion
+  if (id === req.user.id) {
+    return res.status(400).json({ error: 'Cannot delete your own account' });
+  }
+
+  try {
+    // Check if user exists
+    const user = await new Promise((resolve, reject) => {
+      db.get('SELECT id, email, role FROM user WHERE id = ?', [id], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Delete user (sessions will cascade)
+    await new Promise((resolve, reject) => {
+      db.run('DELETE FROM user WHERE id = ?', [id], function(err) {
+        if (err) reject(err);
+        else resolve(this.changes);
+      });
+    });
+
+    res.json({ success: true, message: `User ${user.email} deleted` });
+
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+/**
+ * GET /api/settings/users/stats
+ * Get user statistics
+ */
+router.get('/users-stats', requireAdmin, async (req, res) => {
+  const db = require('../models/database').getDb();
+
+  try {
+    const stats = await new Promise((resolve, reject) => {
+      db.get(`
+        SELECT
+          COUNT(*) as total,
+          SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) as admins,
+          SUM(CASE WHEN role = 'client' THEN 1 ELSE 0 END) as clients,
+          SUM(CASE WHEN createdAt >= date('now', '-7 days') THEN 1 ELSE 0 END) as newThisWeek
+        FROM user
+      `, (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+
+    res.json(stats);
+
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    res.status(500).json({ error: 'Failed to fetch user statistics' });
+  }
+});
+
+// ============================================
+// GMAIL ENDPOINTS
+// ============================================
+
 /**
  * POST /api/settings/gmail/test
  * Send a test email to verify configuration

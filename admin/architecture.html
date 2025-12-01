@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Architecture - Daamitha Gallery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --burgundy: #800020;
+            --deep-teal: #264653;
+            --marigold: #ffb000;
+            --warm-ivory: #fdf8f5;
+            --charcoal: #2a2a2a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Lora', serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-family: 'Crimson Text', serif;
+            color: var(--marigold);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle { color: #aaa; font-size: 1.1rem; }
+
+        .back-link {
+            display: inline-block;
+            color: var(--marigold);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--marigold);
+            border-radius: 25px;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: var(--marigold);
+            color: #1a1a2e;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .tab:hover { border-color: var(--marigold); }
+        .tab.active { background: var(--marigold); color: #1a1a2e; }
+
+        .diagram-container {
+            display: none;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .diagram-container.active { display: block; }
+
+        .diagram-title {
+            font-family: 'Crimson Text', serif;
+            font-size: 1.8rem;
+            color: var(--marigold);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .diagram {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 15px;
+            color: #333;
+        }
+
+        /* C4 Styles */
+        .c4-box {
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin: 0.75rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .c4-person { background: #08427B; color: white; text-align: center; }
+        .c4-system { background: #1168BD; color: white; }
+        .c4-external { background: #999999; color: white; }
+        .c4-container { background: #438DD5; color: white; }
+        .c4-component { background: #85BBF0; color: #000; }
+        .c4-database { background: #FFD93D; color: #000; }
+        .c4-service { background: #10b981; color: white; }
+
+        .c4-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 0.3rem; }
+        .c4-type { font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.3rem; }
+        .c4-description { font-size: 0.9rem; line-height: 1.4; }
+
+        .flow-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .flow-row {
+            display: flex;
+            gap: 1.5rem;
+            align-items: stretch;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .arrow {
+            text-align: center;
+            color: var(--marigold);
+            font-size: 1.5rem;
+        }
+
+        .relationship {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            font-size: 0.85rem;
+        }
+
+        .capabilities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .capability-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .capability-card h3 {
+            color: var(--marigold);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .capability-card ul {
+            list-style: none;
+            color: #ccc;
+        }
+
+        .capability-card li {
+            padding: 0.3rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .capability-card li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-active { background: #10b981; color: white; }
+        .status-config { background: #f59e0b; color: white; }
+
+        .legend {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 1.5rem;
+        }
+
+        .legend-title {
+            color: var(--marigold);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .legend-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #ddd;
+            font-size: 0.9rem;
+        }
+
+        .legend-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 1rem; }
+            h1 { font-size: 2rem; }
+            .tabs { gap: 0.25rem; }
+            .tab { padding: 0.5rem 1rem; font-size: 0.9rem; }
+            .diagram { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/admin/dashboard.html" class="back-link">← Back to Dashboard</a>
+        <h1>System Architecture</h1>
+        <p class="subtitle">C4 Model - Daamitha Gallery Platform</p>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" data-level="capabilities">Current Capabilities</div>
+        <div class="tab" data-level="context">L1: Context</div>
+        <div class="tab" data-level="container">L2: Container</div>
+        <div class="tab" data-level="component">L3: Component</div>
+    </div>
+
+    <!-- Current Capabilities -->
+    <div class="diagram-container active" id="capabilities">
+        <h2 class="diagram-title">Current System Capabilities</h2>
+
+        <div class="capabilities-grid">
+            <div class="capability-card">
+                <h3>🎨 Gallery Management</h3>
+                <ul>
+                    <li>Add, edit, delete artworks</li>
+                    <li>Image upload with optimization</li>
+                    <li>Featured artwork selection (max 6)</li>
+                    <li>Category organization</li>
+                    <li>Price management (admin only)</li>
+                </ul>
+                <div style="margin-top: 1rem;">
+                    <span class="status-badge status-active">Active</span>
+                </div>
+            </div>
+
+            <div class="capability-card">
+                <h3>🔐 Authentication</h3>
+                <ul>
+                    <li>Better Auth unified system</li>
+                    <li>Email/password registration</li>
+                    <li>Google OAuth login</li>
+                    <li>Session-based security</li>
+                    <li>Role-based access (admin/client)</li>
+                </ul>
+                <div style="margin-top: 1rem;">
+                    <span class="status-badge status-active">Active</span>
+                </div>
+            </div>
+
+            <div class="capability-card">
+                <h3>👥 CRM Features</h3>
+                <ul>
+                    <li>Client database</li>
+                    <li>Contact notes & tags</li>
+                    <li>Order tracking</li>
+                    <li>Conversation history</li>
+                    <li>Follow-up reminders</li>
+                </ul>
+                <div style="margin-top: 1rem;">
+                    <span class="status-badge status-active">Active</span>
+                </div>
+            </div>
+
+            <div class="capability-card">
+                <h3>📧 Email Notifications</h3>
+                <ul>
+                    <li>Gmail API integration</li>
+                    <li>Quote emails</li>
+                    <li>Order updates</li>
+                    <li>Welcome emails</li>
+                    <li>Custom notifications</li>
+                </ul>
+                <div style="margin-top: 1rem;">
+                    <span class="status-badge status-config">Needs Config</span>
+                </div>
+            </div>
+
+            <div class="capability-card">
+                <h3>🤖 AI Assistant</h3>
+                <ul>
+                    <li>Claude-powered chat</li>
+                    <li>Artwork inquiries</li>
+                    <li>Commission quotes</li>
+                    <li>CRM tool integration</li>
+                    <li>Context-aware responses</li>
+                </ul>
+                <div style="margin-top: 1rem;">
+                    <span class="status-badge status-config">Needs API Key</span>
+                </div>
+            </div>
+
+            <div class="capability-card">
+                <h3>📊 Admin Dashboard</h3>
+                <ul>
+                    <li>Artwork statistics</li>
+                    <li>Portfolio value tracking</li>
+                    <li>Content management</li>
+                    <li>Settings & configuration</li>
+                    <li>System status monitoring</li>
+                </ul>
+                <div style="margin-top: 1rem;">
+                    <span class="status-badge status-active">Active</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level 1: Context -->
+    <div class="diagram-container" id="context">
+        <h2 class="diagram-title">Level 1: System Context</h2>
+        <div class="diagram">
+            <div class="flow-container">
+                <div class="flow-row">
+                    <div class="c4-box c4-person" style="max-width: 200px;">
+                        <div class="c4-title">Gallery Visitor</div>
+                        <div class="c4-type">[Person]</div>
+                        <div class="c4-description">Browses artworks, chats with AI, creates account</div>
+                    </div>
+                    <div class="c4-box c4-person" style="max-width: 200px;">
+                        <div class="c4-title">Registered Client</div>
+                        <div class="c4-type">[Person]</div>
+                        <div class="c4-description">Views orders, receives emails, saves favorites</div>
+                    </div>
+                    <div class="c4-box c4-person" style="max-width: 200px;">
+                        <div class="c4-title">Admin (Daamitha/Stephen)</div>
+                        <div class="c4-type">[Person]</div>
+                        <div class="c4-description">Manages gallery, CRM, sends emails</div>
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="c4-box c4-system" style="max-width: 600px;">
+                    <div class="c4-title">Daamitha Gallery Platform</div>
+                    <div class="c4-type">[Software System]</div>
+                    <div class="c4-description">
+                        Full-featured art gallery with client management, AI chat assistant,
+                        email notifications, and secure authentication. Built with Node.js,
+                        Better Auth, and Claude AI.
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-row">
+                    <div class="c4-box c4-external" style="max-width: 180px;">
+                        <div class="c4-title">Google OAuth</div>
+                        <div class="c4-type">[External]</div>
+                        <div class="c4-description">User authentication</div>
+                    </div>
+                    <div class="c4-box c4-external" style="max-width: 180px;">
+                        <div class="c4-title">Gmail API</div>
+                        <div class="c4-type">[External]</div>
+                        <div class="c4-description">Email sending</div>
+                    </div>
+                    <div class="c4-box c4-external" style="max-width: 180px;">
+                        <div class="c4-title">Anthropic Claude</div>
+                        <div class="c4-type">[External]</div>
+                        <div class="c4-description">AI chat assistant</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level 2: Container -->
+    <div class="diagram-container" id="container">
+        <h2 class="diagram-title">Level 2: Container Diagram</h2>
+        <div class="diagram">
+            <div class="flow-container">
+                <div class="flow-row">
+                    <div class="c4-box c4-container" style="max-width: 250px;">
+                        <div class="c4-title">Public Gallery</div>
+                        <div class="c4-type">[SPA: HTML/JS]</div>
+                        <div class="c4-description">Artwork display, AI chat, client auth</div>
+                    </div>
+                    <div class="c4-box c4-container" style="max-width: 250px;">
+                        <div class="c4-title">Admin Dashboard</div>
+                        <div class="c4-type">[SPA: HTML/JS]</div>
+                        <div class="c4-description">Gallery management, CRM, settings</div>
+                    </div>
+                    <div class="c4-box c4-container" style="max-width: 250px;">
+                        <div class="c4-title">Client Portal</div>
+                        <div class="c4-type">[SPA: HTML/JS]</div>
+                        <div class="c4-description">Orders, account, favorites</div>
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="c4-box c4-container" style="max-width: 500px;">
+                    <div class="c4-title">API Server</div>
+                    <div class="c4-type">[Node.js + Express]</div>
+                    <div class="c4-description">
+                        RESTful API with Better Auth, artwork management, CRM routes,
+                        AI agent integration, and email services
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-row">
+                    <div class="c4-box c4-database" style="max-width: 200px;">
+                        <div class="c4-title">SQLite Database</div>
+                        <div class="c4-type">[Database]</div>
+                        <div class="c4-description">Users, artworks, orders, sessions</div>
+                    </div>
+                    <div class="c4-box c4-database" style="max-width: 200px;">
+                        <div class="c4-title">File Storage</div>
+                        <div class="c4-type">[Filesystem]</div>
+                        <div class="c4-description">Artwork images, uploads</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-title">Container Legend</div>
+            <div class="legend-grid">
+                <div class="legend-item">
+                    <div class="legend-box" style="background: #438DD5;"></div>
+                    <span>Web Application / API</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box" style="background: #FFD93D;"></div>
+                    <span>Database / Storage</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level 3: Component -->
+    <div class="diagram-container" id="component">
+        <h2 class="diagram-title">Level 3: API Components</h2>
+        <div class="diagram">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                <div class="c4-box c4-component">
+                    <div class="c4-title">Auth Routes</div>
+                    <div class="c4-type">[Better Auth]</div>
+                    <div class="c4-description">
+                        /api/auth/sign-in/email<br>
+                        /api/auth/sign-up/email<br>
+                        /api/auth/callback/google<br>
+                        /api/auth/me
+                    </div>
+                </div>
+
+                <div class="c4-box c4-component">
+                    <div class="c4-title">Artwork Routes</div>
+                    <div class="c4-type">[Express Router]</div>
+                    <div class="c4-description">
+                        GET/POST /api/artworks<br>
+                        PUT/DELETE /api/artworks/:id<br>
+                        PATCH /api/artworks/:id/featured
+                    </div>
+                </div>
+
+                <div class="c4-box c4-component">
+                    <div class="c4-title">CRM Routes</div>
+                    <div class="c4-type">[Express Router]</div>
+                    <div class="c4-description">
+                        /api/crm/contacts<br>
+                        /api/crm/orders<br>
+                        /api/crm/email/send<br>
+                        /api/crm/dashboard
+                    </div>
+                </div>
+
+                <div class="c4-box c4-service">
+                    <div class="c4-title">AI Agent</div>
+                    <div class="c4-type">[Claude Integration]</div>
+                    <div class="c4-description">
+                        Chat processing<br>
+                        CRM tool calls<br>
+                        Quote generation<br>
+                        Context management
+                    </div>
+                </div>
+
+                <div class="c4-box c4-service">
+                    <div class="c4-title">Email Service</div>
+                    <div class="c4-type">[Gmail API]</div>
+                    <div class="c4-description">
+                        Send notifications<br>
+                        Quote emails<br>
+                        Order updates<br>
+                        Welcome messages
+                    </div>
+                </div>
+
+                <div class="c4-box c4-database">
+                    <div class="c4-title">Database Schema</div>
+                    <div class="c4-type">[SQLite Tables]</div>
+                    <div class="c4-description">
+                        user, session, account<br>
+                        artworks, orders<br>
+                        conversations, invoices<br>
+                        email_log, site_content
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-title">Component Legend</div>
+            <div class="legend-grid">
+                <div class="legend-item">
+                    <div class="legend-box" style="background: #85BBF0;"></div>
+                    <span>API Route</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box" style="background: #10b981;"></div>
+                    <span>External Service</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box" style="background: #FFD93D;"></div>
+                    <span>Data Layer</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tabs = document.querySelectorAll('.tab');
+        const diagrams = document.querySelectorAll('.diagram-container');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const level = tab.dataset.level;
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                diagrams.forEach(d => d.classList.remove('active'));
+                document.getElementById(level).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

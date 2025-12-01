@@ -487,6 +487,7 @@
                     <li><a href="dashboard.html#pricelist" data-page="pricelist">Price List</a></li>
                     <li><a href="/" target="_blank">View Gallery</a></li>
                     <li style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 0.5rem; padding-top: 0.5rem;"><a href="settings.html" class="active">Settings</a></li>
+                    <li><a href="architecture.html">Architecture</a></li>
                 </ul>
             </nav>
             <div class="logout-btn">
@@ -589,11 +590,11 @@
                 <!-- Email Configuration -->
                 <section class="settings-section">
                     <h2><span class="icon">📧</span> Email Settings</h2>
-                    <p style="margin-bottom: 1rem; color: #666;">Configure how emails are sent to your clients.</p>
+                    <p style="margin-bottom: 1rem; color: #666;">Configure Gmail integration to send emails to your clients.</p>
 
                     <div class="form-group">
                         <label>Sender Email</label>
-                        <input type="email" id="sender-email" placeholder="daamitha@daamitha.art" disabled>
+                        <input type="email" id="sender-email" placeholder="daamitha@daamitha.gallery" disabled>
                         <p class="form-hint">Set via GMAIL_SENDER_EMAIL in environment variables</p>
                     </div>
 
@@ -607,8 +608,66 @@
                         </div>
                     </div>
 
-                    <div class="info-box">
-                        <p><strong>To enable Gmail:</strong> You need to set up Google OAuth credentials and add them to your .env file. See the documentation for detailed setup instructions.</p>
+                    <!-- Gmail Configuration Details -->
+                    <div id="gmail-config-details" style="margin-top: 1.5rem; display: none;">
+                        <div style="background: var(--warm-ivory); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+                            <h4 style="margin-bottom: 0.75rem; color: var(--deep-teal);">Configuration Status</h4>
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                <li style="padding: 0.3rem 0;">
+                                    <span id="status-client-id">⏳</span> Google Client ID
+                                </li>
+                                <li style="padding: 0.3rem 0;">
+                                    <span id="status-client-secret">⏳</span> Google Client Secret
+                                </li>
+                                <li style="padding: 0.3rem 0;">
+                                    <span id="status-refresh-token">⏳</span> Gmail Refresh Token
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Token Generator Section -->
+                    <div id="gmail-token-section" style="margin-top: 1.5rem;">
+                        <h4 style="margin-bottom: 0.75rem; color: var(--deep-teal);">Generate Gmail Token</h4>
+                        <p style="margin-bottom: 1rem; font-size: 0.95rem; color: #666;">
+                            Click the button below to authorize Gmail access. You'll be redirected to Google to sign in with <strong>daamitha@daamitha.gallery</strong>.
+                        </p>
+
+                        <div class="action-buttons" style="margin-bottom: 1rem;">
+                            <button type="button" class="btn" id="authorize-gmail-btn">
+                                🔑 Authorize Gmail
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="test-email-btn" style="display: none;">
+                                ✉️ Send Test Email
+                            </button>
+                        </div>
+
+                        <div id="gmail-instructions" style="display: none;">
+                            <div class="info-box" style="margin-top: 1rem;">
+                                <p><strong>Instructions:</strong></p>
+                                <ol style="margin: 0.5rem 0 0 1.2rem; padding: 0;">
+                                    <li>Click "Authorize Gmail" above</li>
+                                    <li>Sign in with daamitha@daamitha.gallery</li>
+                                    <li>Click "Allow" to grant permissions</li>
+                                    <li>Copy the refresh token shown</li>
+                                    <li>Add it to Railway as GOOGLE_REFRESH_TOKEN</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Prerequisites Warning -->
+                    <div id="gmail-prerequisites" style="display: none; margin-top: 1.5rem;">
+                        <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem 1.5rem; border-radius: 0 10px 10px 0;">
+                            <p style="margin: 0; color: #b45309;">
+                                <strong>⚠️ Prerequisites Required</strong><br>
+                                Before authorizing, you need to set these in Railway:
+                            </p>
+                            <ul style="margin: 0.5rem 0 0 1.2rem; padding: 0; color: #b45309;">
+                                <li id="prereq-client-id" style="display: none;">GOOGLE_CLIENT_ID</li>
+                                <li id="prereq-client-secret" style="display: none;">GOOGLE_CLIENT_SECRET</li>
+                            </ul>
+                        </div>
                     </div>
                 </section>
 
@@ -894,6 +953,142 @@
             });
         }
 
+        // Check Gmail configuration status
+        async function checkGmailStatus() {
+            try {
+                const response = await authFetch(`${API_BASE}/settings/gmail/status`);
+                const status = await response.json();
+
+                const configDetails = document.getElementById('gmail-config-details');
+                const configStatus = document.getElementById('gmail-config-status');
+                const prerequisites = document.getElementById('gmail-prerequisites');
+                const instructions = document.getElementById('gmail-instructions');
+                const testEmailBtn = document.getElementById('test-email-btn');
+                const authorizeBtn = document.getElementById('authorize-gmail-btn');
+
+                configDetails.style.display = 'block';
+
+                // Update individual status indicators
+                document.getElementById('status-client-id').textContent = status.clientIdSet ? '✅' : '❌';
+                document.getElementById('status-client-secret').textContent = status.clientSecretSet ? '✅' : '❌';
+                document.getElementById('status-refresh-token').textContent = status.refreshTokenSet ? '✅' : '❌';
+
+                // Update sender email
+                document.getElementById('sender-email').value = status.senderEmail;
+
+                // Update overall status
+                if (status.isConfigured) {
+                    configStatus.innerHTML = `
+                        <span class="status-indicator status-ok">
+                            <span class="status-dot"></span>
+                            Configured & Ready
+                        </span>
+                    `;
+                    testEmailBtn.style.display = 'inline-block';
+                    authorizeBtn.textContent = '🔄 Re-authorize Gmail';
+                    instructions.style.display = 'none';
+                    prerequisites.style.display = 'none';
+                } else if (status.clientIdSet && status.clientSecretSet) {
+                    configStatus.innerHTML = `
+                        <span class="status-indicator status-warning">
+                            <span class="status-dot"></span>
+                            Needs Authorization
+                        </span>
+                    `;
+                    instructions.style.display = 'block';
+                    prerequisites.style.display = 'none';
+                    testEmailBtn.style.display = 'none';
+                } else {
+                    configStatus.innerHTML = `
+                        <span class="status-indicator status-error">
+                            <span class="status-dot"></span>
+                            Not Configured
+                        </span>
+                    `;
+                    authorizeBtn.disabled = true;
+                    authorizeBtn.style.opacity = '0.5';
+                    prerequisites.style.display = 'block';
+
+                    if (!status.clientIdSet) {
+                        document.getElementById('prereq-client-id').style.display = 'list-item';
+                    }
+                    if (!status.clientSecretSet) {
+                        document.getElementById('prereq-client-secret').style.display = 'list-item';
+                    }
+                }
+
+                // Update system status email indicator
+                const emailStatusEl = document.getElementById('email-status');
+                if (status.isConfigured) {
+                    emailStatusEl.className = 'status-indicator status-ok';
+                    emailStatusEl.innerHTML = '<span class="status-dot"></span> Configured';
+                } else if (status.clientIdSet) {
+                    emailStatusEl.className = 'status-indicator status-warning';
+                    emailStatusEl.innerHTML = '<span class="status-dot"></span> Needs Token';
+                } else {
+                    emailStatusEl.className = 'status-indicator status-error';
+                    emailStatusEl.innerHTML = '<span class="status-dot"></span> Not Set';
+                }
+
+            } catch (error) {
+                console.error('Failed to check Gmail status:', error);
+                document.getElementById('gmail-config-status').innerHTML = `
+                    <span class="status-indicator status-error">
+                        <span class="status-dot"></span>
+                        Error checking status
+                    </span>
+                `;
+            }
+        }
+
+        // Handle Gmail authorization
+        document.getElementById('authorize-gmail-btn').addEventListener('click', async () => {
+            try {
+                const response = await authFetch(`${API_BASE}/settings/gmail/auth-url`);
+                const data = await response.json();
+
+                if (data.error) {
+                    showToast(data.message || data.error, 'error');
+                    return;
+                }
+
+                // Open OAuth flow in new window
+                window.open(data.authUrl, '_blank', 'width=600,height=700');
+                showToast('Gmail authorization window opened. Complete the process there.');
+
+            } catch (error) {
+                console.error('Failed to get auth URL:', error);
+                showToast('Failed to start Gmail authorization', 'error');
+            }
+        });
+
+        // Handle test email
+        document.getElementById('test-email-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('test-email-btn');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                const response = await authFetch(`${API_BASE}/settings/gmail/test`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`Test email sent to your email address!`);
+                } else {
+                    showToast(data.message || 'Failed to send test email', 'error');
+                }
+
+            } catch (error) {
+                console.error('Test email error:', error);
+                showToast('Failed to send test email', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '✉️ Send Test Email';
+            }
+        });
+
         // Initialize page
         async function init() {
             const user = await checkAuth();
@@ -901,6 +1096,7 @@
                 loadProfile(user);
                 checkSystemStatus();
                 loadPreferences();
+                checkGmailStatus();
             }
         }
 

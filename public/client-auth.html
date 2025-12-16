@@ -167,9 +167,14 @@
             margin-top: 1rem;
         }
 
-        .btn-google:hover {
+        .btn-google:hover:not(:disabled) {
             background: var(--warm-ivory);
             border-color: var(--deep-saffron);
+        }
+
+        .btn-google:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .divider {
@@ -462,6 +467,9 @@
         // Check session on page load
         checkSession();
 
+        // Check if Google OAuth is available
+        checkGoogleOAuth();
+
         // Tab switching
         authTabs.querySelectorAll('.auth-tab').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -647,9 +655,31 @@
 
         // Check if Google OAuth is configured
         async function checkGoogleOAuth() {
-            // Google OAuth requires configuration - disable buttons if not configured
-            // This would need server-side check, for now keep disabled
+            try {
+                const response = await fetch(`${API_BASE}/providers`);
+                const providers = await response.json();
+
+                if (providers.google) {
+                    // Enable Google OAuth buttons
+                    document.getElementById('googleLoginBtn').disabled = false;
+                    document.getElementById('googleRegisterBtn').disabled = false;
+                }
+            } catch (error) {
+                console.error('Failed to check OAuth providers:', error);
+            }
         }
+
+        // Google OAuth login handler
+        document.getElementById('googleLoginBtn').addEventListener('click', () => {
+            // Redirect to Better Auth Google OAuth endpoint
+            window.location.href = `${API_BASE}/sign-in/social?provider=google&callbackURL=${encodeURIComponent(window.location.origin + '/client-auth.html')}`;
+        });
+
+        // Google OAuth register handler (same flow - Google handles account creation)
+        document.getElementById('googleRegisterBtn').addEventListener('click', () => {
+            // Redirect to Better Auth Google OAuth endpoint
+            window.location.href = `${API_BASE}/sign-in/social?provider=google&callbackURL=${encodeURIComponent(window.location.origin + '/client-auth.html')}`;
+        });
     </script>
 </body>
 </html>

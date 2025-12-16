@@ -31,6 +31,13 @@ router.get('/health', (req, res) => {
   });
 });
 
+// Check if Google OAuth is configured
+router.get('/providers', (req, res) => {
+  res.json({
+    google: !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET
+  });
+});
+
 // Custom session check endpoint with role info
 router.get('/me', async (req, res) => {
   try {

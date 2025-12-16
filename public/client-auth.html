@@ -669,17 +669,40 @@
             }
         }
 
+        // Google OAuth handler (used for both login and register)
+        async function initiateGoogleOAuth() {
+            try {
+                // POST to Better Auth social sign-in endpoint
+                const response = await fetch(`${API_BASE}/sign-in/social`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        provider: 'google',
+                        callbackURL: window.location.origin + '/client-auth.html'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.url) {
+                    // Redirect to Google OAuth
+                    window.location.href = data.url;
+                } else if (data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    throw new Error('No redirect URL received');
+                }
+            } catch (error) {
+                showMessage(loginMessage, error.message || 'Failed to initiate Google login', 'error');
+            }
+        }
+
         // Google OAuth login handler
-        document.getElementById('googleLoginBtn').addEventListener('click', () => {
-            // Redirect to Better Auth Google OAuth endpoint
-            window.location.href = `${API_BASE}/sign-in/social?provider=google&callbackURL=${encodeURIComponent(window.location.origin + '/client-auth.html')}`;
-        });
+        document.getElementById('googleLoginBtn').addEventListener('click', initiateGoogleOAuth);
 
         // Google OAuth register handler (same flow - Google handles account creation)
-        document.getElementById('googleRegisterBtn').addEventListener('click', () => {
-            // Redirect to Better Auth Google OAuth endpoint
-            window.location.href = `${API_BASE}/sign-in/social?provider=google&callbackURL=${encodeURIComponent(window.location.origin + '/client-auth.html')}`;
-        });
+        document.getElementById('googleRegisterBtn').addEventListener('click', initiateGoogleOAuth);
     </script>
 </body>
 </html>

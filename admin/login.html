@@ -431,13 +431,29 @@
             errorMessage.style.display = 'none';
 
             try {
-                // Redirect to Better Auth Google OAuth endpoint
-                // After authentication, Google will redirect back to our callback
-                // Better Auth will handle the callback and create a session
-                // Then redirect to the callbackURL (which defaults to the current page)
-                window.location.href = `${AUTH_BASE}/sign-in/social?provider=google&callbackURL=${encodeURIComponent(window.location.origin + '/admin/login.html')}`;
+                // POST to Better Auth social sign-in endpoint
+                const response = await fetch(`${AUTH_BASE}/sign-in/social`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        provider: 'google',
+                        callbackURL: window.location.origin + '/admin/login.html'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.url) {
+                    // Redirect to Google OAuth
+                    window.location.href = data.url;
+                } else if (data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    throw new Error('No redirect URL received');
+                }
             } catch (error) {
-                errorMessage.textContent = error.message;
+                errorMessage.textContent = error.message || 'Failed to initiate Google login';
                 errorMessage.style.display = 'block';
                 btn.disabled = false;
             }

@@ -36,7 +36,10 @@
             font-family: 'Lora', serif;
             line-height: 1.7;
             color: var(--charcoal);
-            background: var(--warm-ivory);
+            background: url('../background.jpg');
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
             padding: 2rem;
             overflow-x: hidden;
             width: 100%;
@@ -45,8 +48,8 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            background: white;
-            padding: 3rem;
+            background: #edd0c8;
+            padding: 2rem;
             border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
@@ -66,7 +69,7 @@
         }
 
         .header p {
-            color: var(--charcoal);
+            color: var(--burgundy);
             font-size: 1.2rem;
             margin-bottom: 1rem;
         }
@@ -77,12 +80,16 @@
         }
 
         .auth-required {
-            background: linear-gradient(135deg, var(--terracotta) 0%, var(--deep-saffron) 100%);
-            color: white;
+            background: url('../bg.jpg');
+             background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            color: var(--burgundy);
             padding: 2rem;
             border-radius: 15px;
             text-align: center;
             margin-bottom: 2rem;
+            font-size: 20px;
         }
 
         .auth-required h2 {
@@ -91,15 +98,40 @@
             margin-bottom: 1rem;
         }
 
+             .back-link {
+                position: static;
+                display: block;
+                margin-bottom: 1.5rem;
+                text-align: center;
+                padding: 12px 24px;
+                min-height: 48px;
+            }
+
+                    .back-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .back-link a {
+            color: var(--burgundy);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .back-link a:hover {
+            color: var(--deep-saffron);
+        }
+       
         .login-btn {
             display: inline-block;
             padding: 1rem 2rem;
-            background: white;
-            color: var(--burgundy);
+            background: var(--burgundy);
+            color: white;
             text-decoration: none;
             border-radius: 25px;
             font-weight: 600;
             transition: all 0.3s ease;
+            margin-top: 10px;
         }
 
         .login-btn:hover {
@@ -178,25 +210,7 @@
             text-align: center;
         }
 
-        .back-link {
-            position: fixed;
-            top: 2rem;
-            left: 2rem;
-            background: linear-gradient(45deg, var(--gold-leaf), var(--marigold));
-            color: var(--charcoal);
-            padding: 0.8rem 1.5rem;
-            border-radius: 25px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .back-link:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        }
-
+ 
         @media print {
             .back-link,
             .auth-required {
@@ -260,15 +274,6 @@
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-            }
-
-            .back-link {
-                position: static;
-                display: block;
-                margin-bottom: 1.5rem;
-                text-align: center;
-                padding: 12px 24px;
-                min-height: 48px;
             }
 
             /* Table becomes horizontally scrollable */
@@ -410,9 +415,9 @@
     </style>
 </head>
 <body>
-    <a href="/" class="back-link">← Back to Gallery</a>
 
     <div class="container">
+
         <div class="header">
             <h1>Daamitha Gallery</h1>
             <p>Contemporary Oil Paintings - Private Price List</p>
@@ -424,6 +429,9 @@
             <p>This price list is available to collectors and gallery partners only.</p>
             <p>Please log in to view pricing information.</p>
             <a href="/admin/login.html" class="login-btn">Login to View Prices</a>
+            <div class="back-link">
+            <a href="/">← Back to Gallery</a>
+        </div>
         </div>
 
         <div id="price-content" style="display: none;">
